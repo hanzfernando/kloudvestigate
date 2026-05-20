@@ -316,3 +316,9 @@ textarea {
   font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
   font-size: 1.4rem;
 }
+
+.mermaid-surface svg {
+  display: block;
+  min-width: 720px;
+  max-width: none;
+}

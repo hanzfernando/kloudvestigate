@@ -1,5 +1,11 @@
 # Internal Telemetry AI Copilot Architecture
 
+The canonical compact project map now lives in `docs/project-architecture.json`.
+Use that JSON when a future model needs the current setup without rereading the
+whole repository. The `/architecture` route imports that file and renders the
+server-side and client-side flows as Mermaid diagrams in a focused client
+component.
+
 ## Processing Flow
 
 1. Operator selects station, metric, time range, and aggregation interval.
