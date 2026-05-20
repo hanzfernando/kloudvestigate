@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PubmatQuickFetch } from "@/components/telemetry/PubmatQuickFetch";
+import { PubmatWorkspace } from "@/components/telemetry/PubmatWorkspace";
 import { metrics } from "@/components/telemetry/constants";
 import { allMetricKeys } from "@/lib/metric-profiles";
 import type { InvestigationMetricKey, MetricKey } from "@/lib/telemetry-types";
@@ -34,7 +34,7 @@ export default async function PubmatPage({ searchParams }: PubmatPageProps) {
       </header>
 
       <main className="mx-auto grid max-w-[1500px] gap-5 px-5 py-5">
-        <PubmatQuickFetch
+        <PubmatWorkspace
           autoRun={autoRun}
           initialIntervalMinutes={initialIntervalMinutes}
           initialMetric={initialMetric}

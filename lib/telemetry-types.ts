@@ -66,6 +66,7 @@ export interface StationMetadata {
   type: string;
   location: [number, number] | null;
   city: string;
+  state: string;
   organizationName: string | null;
   isActive: boolean;
 }

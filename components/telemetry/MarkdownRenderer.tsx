@@ -27,17 +27,45 @@ export function MarkdownRenderer({ text }: { text: string }) {
             </ol>
           );
         }
+        if (block.type === "table") {
+          return (
+            <div className="overflow-x-auto" key={index}>
+              <table className="ops-table">
+                <thead>
+                  <tr>
+                    {block.headers.map((header) => <th key={header}>{renderInline(header)}</th>)}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.rows.map((row, rowIndex) => (
+                    <tr key={`${row.join("|")}-${rowIndex}`}>
+                      {row.map((cell, cellIndex) => (
+                        <td key={`${cell}-${cellIndex}`}>{renderInline(cell)}</td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          );
+        }
         return <p key={index}>{renderInline(block.lines.join(" "))}</p>;
       })}
     </div>
   );
 }
 
-type Block = {
-  type: "paragraph" | "heading" | "code" | "list" | "numbered";
-  lines: string[];
-  level?: 2 | 3;
-};
+type Block =
+  | {
+      type: "paragraph" | "heading" | "code" | "list" | "numbered";
+      lines: string[];
+      level?: 2 | 3;
+    }
+  | {
+      type: "table";
+      headers: string[];
+      rows: string[][];
+    };
 
 function parseBlocks(text: string): Block[] {
   const lines = text.replace(/\r\n/g, "\n").split("\n");
@@ -52,7 +80,9 @@ function parseBlocks(text: string): Block[] {
     }
   }
 
-  for (const line of lines) {
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+
     if (line.trim().startsWith("```")) {
       if (code) {
         blocks.push({ type: "code", lines: code });
@@ -66,6 +96,22 @@ function parseBlocks(text: string): Block[] {
 
     if (code) {
       code.push(line);
+      continue;
+    }
+
+    if (isTableHeader(lines, index)) {
+      flushParagraph();
+      const headers = parseTableCells(line);
+      const rows: string[][] = [];
+      index += 2;
+
+      while (index < lines.length && isTableRow(lines[index])) {
+        rows.push(normalizeTableRow(parseTableCells(lines[index]), headers.length));
+        index += 1;
+      }
+
+      index -= 1;
+      blocks.push({ type: "table", headers, rows });
       continue;
     }
 
@@ -108,6 +154,36 @@ function parseBlocks(text: string): Block[] {
   flushParagraph();
   if (code) blocks.push({ type: "code", lines: code });
   return blocks;
+}
+
+function isTableHeader(lines: string[], index: number) {
+  return isTableRow(lines[index]) && isTableSeparator(lines[index + 1]);
+}
+
+function isTableRow(line?: string) {
+  if (!line) return false;
+  const trimmed = line.trim();
+  return trimmed.includes("|") && !trimmed.startsWith("```");
+}
+
+function isTableSeparator(line?: string) {
+  if (!line) return false;
+  return parseTableCells(line).every((cell) => /^:?-{3,}:?$/.test(cell));
+}
+
+function parseTableCells(line: string) {
+  return line
+    .trim()
+    .replace(/^\|/, "")
+    .replace(/\|$/, "")
+    .split("|")
+    .map((cell) => cell.trim());
+}
+
+function normalizeTableRow(row: string[], columnCount: number) {
+  if (row.length === columnCount) return row;
+  if (row.length > columnCount) return row.slice(0, columnCount);
+  return [...row, ...Array.from({ length: columnCount - row.length }, () => "")];
 }
 
 function renderInline(text: string): ReactNode[] {

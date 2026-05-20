@@ -3,40 +3,16 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Clipboard, Loader2, Play, Square } from "lucide-react";
 import { allMetricKeys, getMetricAnalysisProfile } from "@/lib/metric-profiles";
-import type { InvestigationMetricKey, MetricKey, StationMetadata } from "@/lib/telemetry-types";
-import type { MetricOption, SourceKind } from "./types";
+import type { InvestigationMetricKey, MetricKey } from "@/lib/telemetry-types";
+import type {
+  MetricOption,
+  PubmatBucketWindow,
+  PubmatQuickFetchResponse,
+  PubmatQuickFetchResult,
+  PubmatQuickFetchStatus,
+  SourceKind,
+} from "./types";
 import { formatTime, philippineInputToUtcISOString, toInputValue } from "./utils";
-
-type QuickFetchStatus = "ready" | "attention" | "missing" | "failed";
-
-interface QuickFetchResult {
-  station: StationMetadata;
-  status: QuickFetchStatus;
-  values: Partial<Record<MetricKey, number>>;
-  classifications: string[];
-  error?: string;
-}
-
-interface BucketWindow {
-  bucketStart: string;
-  bucketEnd: string;
-  fetchStart: string;
-  fetchEnd: string;
-}
-
-interface PubmatQuickFetchResponse {
-  selection: {
-    metric: InvestigationMetricKey;
-    intervalMinutes: number;
-    requestGapMs: number;
-    selectedMetricKeys: MetricKey[];
-    timestamp: string;
-  };
-  window: BucketWindow;
-  source: SourceKind;
-  stationCount: number;
-  results: QuickFetchResult[];
-}
 
 const intervalOptions = [
   { label: "15 minutes", value: 15 },
@@ -52,11 +28,13 @@ export function PubmatQuickFetch({
   initialIntervalMinutes = 60,
   initialMetric = "rainfall",
   metrics,
+  onDataChange,
 }: {
   autoRun?: boolean;
   initialIntervalMinutes?: number;
   initialMetric?: InvestigationMetricKey;
   metrics: MetricOption[];
+  onDataChange?: (data: PubmatQuickFetchResponse | null) => void;
 }) {
   const [metric, setMetric] = useState<InvestigationMetricKey>(initialMetric);
   const [timestamp, setTimestamp] = useState(() => {
@@ -66,8 +44,8 @@ export function PubmatQuickFetch({
   });
   const [intervalMinutes, setIntervalMinutes] = useState(initialIntervalMinutes);
   const [requestGapMs, setRequestGapMs] = useState(600);
-  const [results, setResults] = useState<QuickFetchResult[]>([]);
-  const [responseWindow, setResponseWindow] = useState<BucketWindow | null>(null);
+  const [results, setResults] = useState<PubmatQuickFetchResult[]>([]);
+  const [responseWindow, setResponseWindow] = useState<PubmatBucketWindow | null>(null);
   const [source, setSource] = useState<SourceKind | null>(null);
   const [running, setRunning] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -99,6 +77,7 @@ export function PubmatQuickFetch({
     setResponseWindow(null);
     setSource(null);
     setCopyState("idle");
+    onDataChange?.(null);
 
     const controller = new AbortController();
     abortControllerRef.current = controller;
@@ -123,6 +102,7 @@ export function PubmatQuickFetch({
       setResults(payload.results);
       setResponseWindow(payload.window);
       setSource(payload.source);
+      onDataChange?.(payload);
     } catch (requestError) {
       if (controller.signal.aborted) {
         setError("Fetch stopped.");
@@ -133,7 +113,7 @@ export function PubmatQuickFetch({
       abortControllerRef.current = null;
       setRunning(false);
     }
-  }, [intervalMinutes, metric, safeGapMs, timestamp]);
+  }, [intervalMinutes, metric, onDataChange, safeGapMs, timestamp]);
 
   useEffect(() => {
     if (!autoRun || autoRunStartedRef.current) return;
@@ -276,7 +256,7 @@ export function PubmatQuickFetch({
   );
 }
 
-function StatusChip({ status }: { status: QuickFetchStatus }) {
+function StatusChip({ status }: { status: PubmatQuickFetchStatus }) {
   const label = status === "ready"
     ? "Ready"
     : status === "attention"
@@ -293,7 +273,7 @@ function StatusChip({ status }: { status: QuickFetchStatus }) {
   return <span className={className}>{label}</span>;
 }
 
-function buildBucketWindow(timestampInput: string, intervalMinutes: number): BucketWindow {
+function buildBucketWindow(timestampInput: string, intervalMinutes: number): PubmatBucketWindow {
   const bucketEndMs = Date.parse(philippineInputToUtcISOString(timestampInput));
   const intervalMs = intervalMinutes * 60_000;
   const bucketStartMs = bucketEndMs - intervalMs;
@@ -306,12 +286,13 @@ function buildBucketWindow(timestampInput: string, intervalMinutes: number): Buc
   };
 }
 
-function buildTsv(results: QuickFetchResult[], metricKeys: MetricKey[]) {
+function buildTsv(results: PubmatQuickFetchResult[], metricKeys: MetricKey[]) {
   if (!results.length) return "";
 
   const headers = [
     "station_id",
     "station_name",
+    "province",
     "city",
     "classification",
     ...metricKeys.map((key) => getMetricAnalysisProfile(key).label),
@@ -320,6 +301,7 @@ function buildTsv(results: QuickFetchResult[], metricKeys: MetricKey[]) {
   const rows = results.map((result) => [
     result.station.id,
     result.station.name,
+    result.station.state,
     result.station.city,
     result.status,
     ...metricKeys.map((key) => formatValue(result.values[key])),
