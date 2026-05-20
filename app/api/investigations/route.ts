@@ -5,6 +5,7 @@ import {
   getTelemetryMetricHistoryFromKloudtrackApi,
   normalizeTelemetry,
 } from "@/lib/kloudtrack-api";
+import { getMetricAnalysisProfile } from "@/lib/metric-profiles";
 import { createDemoTelemetry } from "@/lib/mock-telemetry";
 import { analyzeTelemetry, defaultWarningLevels, findPointInTime } from "@/lib/telemetry-analysis";
 import type { InvestigationSelection, MetricKey } from "@/lib/telemetry-types";
@@ -44,7 +45,7 @@ export async function POST(request: Request) {
       start: selection.start,
       end: selection.end,
       aggregationMinutes: selection.aggregationMinutes,
-      spikeDelta: selection.metric === "temperature" ? 1.2 : 0.75,
+      metricProfile: getMetricAnalysisProfile(selection.metric),
     });
     const context = buildInvestigationContext(
       source.station,
@@ -87,6 +88,7 @@ export async function POST(request: Request) {
       answer: aiResult.answer,
       aiProvider: aiResult.provider,
       aiError: aiResult.error,
+      records: source.records,
       source: requestedDemoData || !process.env.KLOUDTRACK_API_TOKEN ? "demo" : "kloudtrack",
     });
   } catch (error) {

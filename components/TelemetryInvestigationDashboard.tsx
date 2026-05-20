@@ -194,10 +194,11 @@ export function TelemetryInvestigationDashboard() {
 
         <section className="grid gap-4">
           {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
-          <div className="grid gap-3 md:grid-cols-4">
+          <div className="grid gap-3 md:grid-cols-5">
             <Stat label="Average" value={data?.analysis.summary.average ?? 0} />
             <Stat label="Maximum" value={data?.analysis.summary.maximum ?? 0} />
             <Stat label="Missing" value={data?.analysis.summary.missingRecordCount ?? 0} />
+            <Stat label="Out of range" value={data?.analysis.rangeViolations.length ?? 0} />
             <Stat label="Warnings" value={data?.analysis.thresholdCrossings.length ?? 0} />
           </div>
 
@@ -206,8 +207,15 @@ export function TelemetryInvestigationDashboard() {
               <div>
                 <h2 className="panel-title">Telemetry Timeline</h2>
                 <p className="text-sm text-[#5f6b63]">
-                  Aggregated summaries with deterministic spike, warning, and missing-data markers.
+                  Aggregated summaries with metric-specific acceptable ranges, spike limits, warning, and missing-data markers.
                 </p>
+                {data?.analysis.metricProfile ? (
+                  <p className="mt-1 text-xs text-[#6b786f]">
+                    Acceptable range: {data.analysis.metricProfile.acceptableRange.minimum} to{" "}
+                    {data.analysis.metricProfile.acceptableRange.maximum} {data.analysis.metricProfile.unit};
+                    spike limit: {data.analysis.metricProfile.spikeDelta} {data.analysis.metricProfile.unit}.
+                  </p>
+                ) : null}
               </div>
               <span className="status-chip">
                 {data?.source === "kloudtrack" || stationSource === "kloudtrack"
@@ -224,9 +232,20 @@ export function TelemetryInvestigationDashboard() {
               empty="No spikes detected"
               items={(data?.analysis.spikes ?? []).slice(0, 6).map((item) => ({
                 primary: formatTime(item.timestamp),
-                secondary: `${item.previousValue} to ${item.currentValue} (${item.difference})`,
+                secondary: `${item.previousValue} to ${item.currentValue} (${item.difference}); limit ${item.limit}`,
               }))}
             />
+            <EventList
+              title="Acceptable Range"
+              empty="No range violations"
+              items={(data?.analysis.rangeViolations ?? []).slice(0, 6).map((item) => ({
+                primary: formatTime(item.timestamp),
+                secondary: `${item.value} is ${item.direction} configured range ${item.minimum} to ${item.maximum}`,
+              }))}
+            />
+          </div>
+
+          <div className="grid gap-4 lg:grid-cols-2">
             <EventList
               title="Data Quality"
               empty="No missing periods or duplicates"

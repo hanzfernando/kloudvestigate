@@ -2,8 +2,10 @@ import type {
   DuplicateTimestamp,
   FlatlinePeriod,
   IntervalSummary,
+  MetricAnalysisProfile,
   MissingPeriod,
   PointMatch,
+  RangeViolation,
   SpikeEvent,
   TelemetryAnalysis,
   TelemetryRecord,
@@ -11,6 +13,7 @@ import type {
   WarningLevel,
   WarningName,
 } from "./telemetry-types";
+import { getMetricAnalysisProfile } from "./metric-profiles";
 
 const minuteMs = 60_000;
 
@@ -19,7 +22,7 @@ export interface AnalyzeTelemetryOptions {
   end: string;
   aggregationMinutes: number;
   expectedIntervalMinutes?: number;
-  spikeDelta?: number;
+  metricProfile?: MetricAnalysisProfile;
   flatlineMinutes?: number;
   staleAfterMinutes?: number;
 }
@@ -38,8 +41,9 @@ export function analyzeTelemetry(
   options: AnalyzeTelemetryOptions,
 ): TelemetryAnalysis {
   const expectedIntervalMinutes = options.expectedIntervalMinutes ?? 1;
-  const spikeDelta = options.spikeDelta ?? 0.75;
-  const flatlineMinutes = options.flatlineMinutes ?? 20;
+  const metricProfile = options.metricProfile ?? getMetricAnalysisProfile("calculatedWaterLevel");
+  const spikeDelta = metricProfile.spikeDelta;
+  const flatlineMinutes = options.flatlineMinutes ?? metricProfile.flatlineMinutes;
   const staleAfterMinutes = options.staleAfterMinutes ?? 15;
   const sorted = [...input]
     .filter((record) => Number.isFinite(record.value))
@@ -61,6 +65,7 @@ export function analyzeTelemetry(
     expectedIntervalMinutes,
   );
   const spikes = findSpikes(unique, spikeDelta);
+  const rangeViolations = findRangeViolations(unique, metricProfile);
   const thresholdCrossings = findThresholdCrossings(unique, warningLevels);
   const flatlinePeriods = findFlatlines(unique, flatlineMinutes);
   const intervals = buildIntervalSummaries(
@@ -97,8 +102,10 @@ export function analyzeTelemetry(
         ? Date.parse(options.end) - Date.parse(latestReading.timestamp) > staleAfterMinutes * minuteMs
         : true,
     },
+    metricProfile,
     intervals,
     spikes,
+    rangeViolations,
     thresholdCrossings,
     missingPeriods,
     duplicateTimestamps: duplicates,
@@ -227,10 +234,29 @@ function findSpikes(records: TelemetryRecord[], spikeDelta: number): SpikeEvent[
         previousValue: round(previous.value),
         currentValue: round(current.value),
         difference: round(difference),
+        limit: spikeDelta,
       });
     }
   }
   return spikes;
+}
+
+function findRangeViolations(
+  records: TelemetryRecord[],
+  profile: MetricAnalysisProfile,
+): RangeViolation[] {
+  return records
+    .filter((record) => (
+      record.value < profile.acceptableRange.minimum ||
+      record.value > profile.acceptableRange.maximum
+    ))
+    .map((record) => ({
+      timestamp: record.timestamp,
+      value: round(record.value),
+      minimum: profile.acceptableRange.minimum,
+      maximum: profile.acceptableRange.maximum,
+      direction: record.value < profile.acceptableRange.minimum ? "below" : "above",
+    }));
 }
 
 function findThresholdCrossings(

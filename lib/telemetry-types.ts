@@ -88,6 +88,27 @@ export interface SpikeEvent {
   previousValue: number;
   currentValue: number;
   difference: number;
+  limit: number;
+}
+
+export interface MetricAnalysisProfile {
+  metric: MetricKey;
+  label: string;
+  unit: string;
+  acceptableRange: {
+    minimum: number;
+    maximum: number;
+  };
+  spikeDelta: number;
+  flatlineMinutes: number;
+}
+
+export interface RangeViolation {
+  timestamp: string;
+  value: number;
+  minimum: number;
+  maximum: number;
+  direction: "below" | "above";
 }
 
 export interface ThresholdCrossing {
@@ -144,8 +165,10 @@ export interface TelemetryAnalysis {
     trend: "increasing" | "decreasing" | "stable";
     stale: boolean;
   };
+  metricProfile: MetricAnalysisProfile;
   intervals: IntervalSummary[];
   spikes: SpikeEvent[];
+  rangeViolations: RangeViolation[];
   thresholdCrossings: ThresholdCrossing[];
   missingPeriods: MissingPeriod[];
   duplicateTimestamps: DuplicateTimestamp[];
@@ -157,10 +180,12 @@ export interface TelemetryAnalysis {
 export interface InvestigationContext {
   station: StationMetadata;
   metric: MetricKey;
+  metricProfile: MetricAnalysisProfile;
   timeRange: { start: string; end: string };
   latestTimestamp: string | null;
   summary: TelemetryAnalysis["summary"];
   spikes: SpikeEvent[];
+  rangeViolations: RangeViolation[];
   thresholdCrossings: ThresholdCrossing[];
   missingPeriods: MissingPeriod[];
   duplicateTimestamps: DuplicateTimestamp[];

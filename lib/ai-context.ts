@@ -19,10 +19,12 @@ export function buildInvestigationContext(
   const payload: InvestigationContext = {
     station,
     metric,
+    metricProfile: analysis.metricProfile,
     timeRange: { start: selection.start, end: selection.end },
     latestTimestamp: analysis.summary.latestTimestamp,
     summary: analysis.summary,
     spikes: analysis.spikes.slice(0, 24),
+    rangeViolations: analysis.rangeViolations.slice(0, 24),
     thresholdCrossings: analysis.thresholdCrossings.slice(0, 24),
     missingPeriods: analysis.missingPeriods.slice(0, 24),
     duplicateTimestamps: analysis.duplicateTimestamps.slice(0, 24),
@@ -35,7 +37,7 @@ export function buildInvestigationContext(
     warningLevels,
     tokenBudget: {
       strategy:
-        "Raw minute telemetry omitted; context contains summaries, warnings, spikes, gaps, flatlines, and significant readings.",
+        "Raw minute telemetry omitted; context contains summaries, acceptable ranges, range violations, warnings, spikes, gaps, flatlines, and significant readings.",
       estimatedTokens: 0,
       rawRecordsOmitted: rawRecordCount,
     },
@@ -65,6 +67,9 @@ export function explainFindings(context: InvestigationContext, question: string)
   const highest = context.significantReadings.highest;
   const subject = `${context.station.name} / ${context.metric}`;
   const range = `${formatTime(context.timeRange.start)} to ${formatTime(context.timeRange.end)}`;
+  const profile = context.metricProfile;
+  const observedRange = `${context.summary.minimum} to ${context.summary.maximum}`;
+  const configuredRange = `${profile.acceptableRange.minimum} to ${profile.acceptableRange.maximum} ${profile.unit}`;
 
   if (q.includes("highest") || q.includes("max")) {
     return highest
@@ -82,10 +87,18 @@ export function explainFindings(context: InvestigationContext, question: string)
 
   if (q.includes("spike") || q.includes("jump") || q.includes("unstable")) {
     if (!context.spikes.length) {
-      return `${subject}: no configured spike events were detected in ${range}. Trend is ${context.summary.trend}, with min ${context.summary.minimum}, max ${context.summary.maximum}, and average ${context.summary.average}.`;
+      return `${subject}: no configured spike events were detected in ${range}. Trend is ${context.summary.trend}, with observed min/max ${observedRange} and average ${context.summary.average}. Configured acceptable range is ${configuredRange}.`;
     }
     const first = context.spikes[0];
-    return `${subject}: ${context.spikes.length} spike event(s) were detected. First spike was at ${formatTime(first.timestamp)}, moving from ${first.previousValue} to ${first.currentValue} (${first.difference}). Highest reading was ${highest?.value ?? "n/a"} at ${formatTime(highest?.timestamp)}.`;
+    return `${subject}: ${context.spikes.length} spike event(s) were detected using the ${first.limit} ${profile.unit} per-interval jump limit for ${profile.label}. First spike was at ${formatTime(first.timestamp)}, moving from ${first.previousValue} to ${first.currentValue} (${first.difference}). Range violations detected: ${context.rangeViolations.length}.`;
+  }
+
+  if (q.includes("range") || q.includes("acceptable") || q.includes("invalid") || q.includes("out of bounds")) {
+    if (!context.rangeViolations.length) {
+      return `${subject}: no acceptable-range violations were detected in ${range}. Configured acceptable range is ${configuredRange}; observed min/max were ${context.summary.minimum}/${context.summary.maximum}. Latest available timestamp is ${formatTime(context.latestTimestamp)}.`;
+    }
+    const first = context.rangeViolations[0];
+    return `${subject}: ${context.rangeViolations.length} acceptable-range violation(s) were detected. First violation was ${first.value}, ${first.direction} the configured range ${first.minimum} to ${first.maximum}, at ${formatTime(first.timestamp)}.`;
   }
 
   if (q.includes("warning") || q.includes("threshold") || q.includes("critical")) {
@@ -106,7 +119,7 @@ export function explainFindings(context: InvestigationContext, question: string)
     !top || item.maximum > top.maximum ? item : top
   ), context.intervalSummaries[0]);
 
-  return `${subject}: from ${range}, readings were ${context.summary.trend}. Average ${context.summary.average}, min ${context.summary.minimum}, max ${context.summary.maximum}, records ${context.summary.recordCount}/${context.summary.expectedRecordCount}. ${context.spikes.length} spike(s), ${context.thresholdCrossings.length} warning crossing(s), and ${context.summary.missingRecordCount} missing expected record(s) were found. Highest interval by max was ${busiest?.label ?? "n/a"}. Latest available timestamp is ${formatTime(context.latestTimestamp)}.`;
+  return `${subject}: from ${range}, readings were ${context.summary.trend}. Average ${context.summary.average}, min ${context.summary.minimum}, max ${context.summary.maximum}, records ${context.summary.recordCount}/${context.summary.expectedRecordCount}. ${context.spikes.length} spike(s), ${context.rangeViolations.length} range violation(s), ${context.thresholdCrossings.length} warning crossing(s), and ${context.summary.missingRecordCount} missing expected record(s) were found. Highest interval by max was ${busiest?.label ?? "n/a"}. Latest available timestamp is ${formatTime(context.latestTimestamp)}.`;
 }
 
 export function compactSignificantReadings(records: TelemetryRecord[], maxItems = 12): TelemetryRecord[] {
