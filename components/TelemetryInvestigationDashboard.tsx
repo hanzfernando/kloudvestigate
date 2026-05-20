@@ -63,7 +63,15 @@ export function TelemetryInvestigationDashboard() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  async function runInvestigation(nextQuestion = question, selectedStationId = stationId) {
+  async function runInvestigation({
+    askCopilot = false,
+    nextQuestion = question,
+    selectedStationId = stationId,
+  }: {
+    askCopilot?: boolean;
+    nextQuestion?: string;
+    selectedStationId?: string;
+  } = {}) {
     setLoading(true);
     setError(null);
 
@@ -78,6 +86,7 @@ export function TelemetryInvestigationDashboard() {
           start: new Date(start).toISOString(),
           end: new Date(end).toISOString(),
           question: nextQuestion,
+          askCopilot,
           useDemoData: false,
         }),
       });
@@ -139,7 +148,6 @@ export function TelemetryInvestigationDashboard() {
           onEndChange={setEnd}
           onAggregationChange={setAggregationMinutes}
           onQuestionChange={setQuestion}
-          onRunQuestion={(nextQuestion) => void runInvestigation(nextQuestion)}
         />
 
         <section className="grid gap-4">
@@ -165,7 +173,7 @@ export function TelemetryInvestigationDashboard() {
           data={data}
           loading={loading}
           onQuestionChange={setQuestion}
-          onRun={() => void runInvestigation()}
+          onRun={() => void runInvestigation({ askCopilot: true })}
         />
       </main>
     </div>

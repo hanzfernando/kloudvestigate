@@ -12,7 +12,17 @@ export function toInputValue(date: Date) {
 
 export function formatTime(value?: string | null) {
   if (!value) return "n/a";
-  return new Date(value).toISOString().slice(0, 16).replace("T", " ");
+  const parts = new Intl.DateTimeFormat("en-PH", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Manila",
+  }).formatToParts(new Date(value));
+  const byType = Object.fromEntries(parts.map((part) => [part.type, part.value]));
+  return `${byType.year}-${byType.month}-${byType.day} ${byType.hour}:${byType.minute} PHT`;
 }
 
 export function sortRecords(

@@ -32,7 +32,7 @@ export function FetchedValuesTable({
         <table className="ops-table">
           <thead>
             <tr>
-              <SortableHeader label="Timestamp" sortKey="timestamp" activeKey={sortKey} direction={sortDirection} onSort={onSort} />
+              <SortableHeader label="Timestamp (PH)" sortKey="timestamp" activeKey={sortKey} direction={sortDirection} onSort={onSort} />
               <SortableHeader label="Value" sortKey="value" activeKey={sortKey} direction={sortDirection} onSort={onSort} />
               <SortableHeader label="Record ID" sortKey="id" activeKey={sortKey} direction={sortDirection} onSort={onSort} />
               <th>Flags</th>

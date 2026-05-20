@@ -1,85 +1,112 @@
-import type { TelemetryAnalysis } from "@/lib/telemetry-types";
+import type { RangeViolation, SpikeEvent, TelemetryAnalysis } from "@/lib/telemetry-types";
 import { formatTime, rankRangeViolations, rankSpikes } from "./utils";
 
 export function OutlierOverview({ analysis }: { analysis?: TelemetryAnalysis }) {
-  const rangeOutliers = rankRangeViolations(analysis?.rangeViolations ?? []).slice(0, 5);
+  const rangeOutliers = rankRangeViolations(analysis?.rangeViolations ?? []);
   const spikeOutliers = rankSpikes(analysis?.spikes ?? []).slice(0, 5);
+  const profile = analysis?.metricProfile;
 
   return (
-    <div className="panel">
+    <div className="panel overflow-hidden">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <h2 className="panel-title">Outlier Review</h2>
+          <h2 className="panel-title">Acceptable Range Audit</h2>
           <p className="mt-1 text-sm text-[#5f6b63]">
-            Worst range violations and largest jumps, ranked for quick operational review.
+            Exact timestamps and readings outside the configured range, ready for deletion review.
           </p>
         </div>
         <span className="status-chip">
-          {(analysis?.rangeViolations.length ?? 0) + (analysis?.spikes.length ?? 0)} signals
+          {analysis?.rangeViolations.length ?? 0} range flags
         </span>
       </div>
 
-      <div className="mt-4 grid gap-4 lg:grid-cols-2">
-        <OutlierColumn
-          title="Largest Range Violations"
-          empty="No values outside the configured range."
-          items={rangeOutliers.map((item) => ({
-            time: formatTime(item.timestamp),
-            value: `${item.value}`,
-            detail: `${item.direction} ${item.minimum} to ${item.maximum}`,
-            severity: item.direction === "above"
-              ? item.value - item.maximum
-              : item.minimum - item.value,
-          }))}
-        />
-        <OutlierColumn
-          title="Largest Jumps"
-          empty="No jump events beyond the metric limit."
-          items={spikeOutliers.map((item) => ({
-            time: formatTime(item.timestamp),
-            value: `${item.currentValue}`,
-            detail: `${item.previousValue} to ${item.currentValue}; delta ${item.difference}`,
-            severity: Math.abs(item.difference),
-          }))}
-        />
+      {profile ? (
+        <p className="mt-3 text-sm text-[#5f6b63]">
+          Accepted range: {profile.acceptableRange.minimum} to {profile.acceptableRange.maximum} {profile.unit}
+        </p>
+      ) : null}
+
+      <RangeViolationTable items={rangeOutliers} />
+
+      <div className="mt-5 border-t border-[#dbe1d8] pt-4">
+        <div className="flex items-center justify-between gap-3">
+          <h3 className="text-sm font-semibold text-[#26372d]">Largest Jumps</h3>
+          <span className="count-chip count-chip-caution">{analysis?.spikes.length ?? 0}</span>
+        </div>
+        <JumpTable items={spikeOutliers} />
       </div>
     </div>
   );
 }
 
-function OutlierColumn({
-  title,
-  empty,
-  items,
-}: {
-  title: string;
-  empty: string;
-  items: Array<{ time: string; value: string; detail: string; severity: number }>;
-}) {
-  const maxSeverity = Math.max(...items.map((item) => item.severity), 1);
+function RangeViolationTable({ items }: { items: RangeViolation[] }) {
+  if (!items.length) {
+    return <p className="mt-4 text-sm text-[#5f6b63]">No readings outside the configured acceptable range.</p>;
+  }
 
   return (
-    <div className="rounded border border-[#dbe1d8] bg-white p-3">
-      <h3 className="text-sm font-semibold text-[#26372d]">{title}</h3>
-      <div className="mt-3 grid gap-2">
-        {items.length ? items.map((item) => (
-          <div className="outlier-row" key={`${item.time}-${item.value}-${item.detail}`}>
-            <div className="flex items-start justify-between gap-3">
-              <div>
-                <p className="font-mono text-sm">{item.time}</p>
-                <p className="mt-1 text-sm text-[#5f6b63]">{item.detail}</p>
-              </div>
-              <strong>{item.value}</strong>
-            </div>
-            <div className="mt-2 h-1.5 overflow-hidden rounded bg-[#edf0ea]">
-              <div
-                className="h-full rounded bg-[#b9472b]"
-                style={{ width: `${Math.max(8, (item.severity / maxSeverity) * 100)}%` }}
-              />
-            </div>
-          </div>
-        )) : <p className="text-sm text-[#5f6b63]">{empty}</p>}
-      </div>
+    <div className="mt-4 max-h-[420px] overflow-auto">
+      <table className="ops-table min-w-[860px]">
+        <thead>
+          <tr>
+            <th>Timestamp (PH)</th>
+            <th>Reading</th>
+            <th>Accepted Range</th>
+            <th>Direction</th>
+            <th>Difference</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => {
+            const difference = item.direction === "above"
+              ? item.value - item.maximum
+              : item.minimum - item.value;
+
+            return (
+              <tr className="row-outlier" key={`${item.timestamp}-${item.value}-${item.minimum}-${item.maximum}`}>
+                <td className="font-mono">{formatTime(item.timestamp)}</td>
+                <td className="font-semibold">{item.value}</td>
+                <td>{item.minimum} to {item.maximum}</td>
+                <td>{item.direction}</td>
+                <td>{difference}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+function JumpTable({ items }: { items: SpikeEvent[] }) {
+  if (!items.length) {
+    return <p className="mt-3 text-sm text-[#5f6b63]">No jump events beyond the metric limit.</p>;
+  }
+
+  return (
+    <div className="mt-3 overflow-auto">
+      <table className="ops-table min-w-[760px]">
+        <thead>
+          <tr>
+            <th>Timestamp (PH)</th>
+            <th>Reading</th>
+            <th>Previous Reading</th>
+            <th>Delta</th>
+            <th>Limit</th>
+          </tr>
+        </thead>
+        <tbody>
+          {items.map((item) => (
+            <tr className="row-spike" key={`${item.timestamp}-${item.previousTimestamp}-${item.currentValue}`}>
+              <td className="font-mono">{formatTime(item.timestamp)}</td>
+              <td className="font-semibold">{item.currentValue}</td>
+              <td>{item.previousValue}</td>
+              <td>{item.difference}</td>
+              <td>{item.limit}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
   );
 }

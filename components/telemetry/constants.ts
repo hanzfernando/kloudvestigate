@@ -1,15 +1,15 @@
 import type { MetricOption } from "./types";
 
 export const metrics: MetricOption[] = [
-  { label: "Water level", value: "calculatedWaterLevel" },
-  { label: "Sensor distance", value: "distance" },
-  { label: "Rainfall", value: "rainfall" },
   { label: "Temperature", value: "temperature" },
-  { label: "Heat Index", value: "heatIndex" },
   { label: "Humidity", value: "humidity" },
+  { label: "Heat Index", value: "heatIndex" },
   { label: "Pressure", value: "pressure" },
   { label: "Wind speed", value: "windSpeed" },
   { label: "Light", value: "lightIntensity" },
+  { label: "UV Index", value: "uvIndex"},
+  { label: "Rainfall", value: "rainfall" },
+
 ];
 
 export const questions = [

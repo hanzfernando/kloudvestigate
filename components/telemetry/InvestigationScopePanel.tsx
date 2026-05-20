@@ -17,7 +17,6 @@ export function InvestigationScopePanel({
   onEndChange,
   onAggregationChange,
   onQuestionChange,
-  onRunQuestion,
 }: {
   stations: StationMetadata[];
   stationId: string;
@@ -33,7 +32,6 @@ export function InvestigationScopePanel({
   onEndChange: (value: string) => void;
   onAggregationChange: (value: number) => void;
   onQuestionChange: (value: string) => void;
-  onRunQuestion: (question: string) => void;
 }) {
   return (
     <aside className="panel h-fit">
@@ -81,10 +79,8 @@ export function InvestigationScopePanel({
             <button
               className="question-button"
               key={item}
-              onClick={() => {
-                onQuestionChange(item);
-                onRunQuestion(item);
-              }}
+              type="button"
+              onClick={() => onQuestionChange(item)}
             >
               {item}
             </button>

@@ -35,10 +35,12 @@ export async function POST(request: Request) {
     const body = (await request.json()) as Partial<InvestigationSelection> & {
       question?: string;
       pointTimestamp?: string;
+      askCopilot?: boolean;
       useDemoData?: boolean;
     };
 
     const requestedDemoData = body.useDemoData ?? false;
+    const askCopilot = body.askCopilot ?? false;
     const selection = parseSelection(body);
     const source = await loadTelemetry(selection, requestedDemoData);
     const analysis = analyzeTelemetry(source.records, defaultWarningLevels, {
@@ -55,27 +57,25 @@ export async function POST(request: Request) {
       defaultWarningLevels,
       source.records.length,
     );
-    const prompt = buildAiPrompt(
-      context,
-      body.question || "Summarize the selected telemetry range.",
-    );
+    const question = body.question || "Summarize the selected telemetry range.";
+    const prompt = askCopilot ? buildAiPrompt(context, question) : null;
     const pointMatch = body.pointTimestamp
       ? findPointInTime(source.records, body.pointTimestamp)
       : null;
-    const deterministicAnswer = explainFindings(
-      context,
-      body.question || "Summarize the selected telemetry range.",
-    );
-    const aiResult = await generateAnswer(prompt, deterministicAnswer);
+    const deterministicAnswer = askCopilot ? explainFindings(context, question) : null;
+    const aiResult = prompt && deterministicAnswer
+      ? await generateAnswer(prompt, deterministicAnswer)
+      : null;
 
     writeAuditEvent({
       action: "investigation.run",
+      askCopilot,
       stationId: selection.stationId,
       metric: selection.metric,
       start: selection.start,
       end: selection.end,
       promptTokensEstimated: context.tokenBudget.estimatedTokens,
-      aiProvider: aiResult.provider,
+      aiProvider: aiResult?.provider ?? null,
     });
 
     return Response.json({
@@ -85,9 +85,9 @@ export async function POST(request: Request) {
       context,
       prompt,
       pointMatch,
-      answer: aiResult.answer,
-      aiProvider: aiResult.provider,
-      aiError: aiResult.error,
+      answer: aiResult?.answer ?? null,
+      aiProvider: aiResult?.provider ?? null,
+      aiError: aiResult?.error,
       records: source.records,
       source: requestedDemoData || !process.env.KLOUDTRACK_API_TOKEN ? "demo" : "kloudtrack",
     });
