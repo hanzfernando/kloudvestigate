@@ -144,7 +144,11 @@ export function TelemetryInvestigationDashboard() {
           {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
           <SummaryStats analysis={data?.analysis} />
           <OutlierOverview analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
-          <TelemetryTimeline analysis={data?.analysis} sourceLabel={sourceLabel} />
+          <TelemetryTimeline
+            analysis={data?.analysis}
+            metricAnalyses={data?.metricAnalyses}
+            sourceLabel={sourceLabel}
+          />
           <EventsPanel analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
           <FetchedValuesTable
             analysis={data?.analysis}
