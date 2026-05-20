@@ -1,40 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
-
-interface DebugPayload {
-  context: unknown;
-  prompt: string;
-  answer: string;
-}
 
 export default function AiContextDebugPage() {
-  const [payload, setPayload] = useState<DebugPayload | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    async function load() {
-      const response = await fetch("/api/investigations", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          stationId: "station-001",
-          metric: "calculatedWaterLevel",
-          start: "2026-05-20T00:00:00.000Z",
-          end: "2026-05-20T16:00:00.000Z",
-          aggregationMinutes: 60,
-          question: "What timestamps did the data spike and did it cross warning levels?",
-          useDemoData: true,
-        }),
-      });
-      setPayload((await response.json()) as DebugPayload);
-      setLoading(false);
-    }
-
-    void load();
-  }, []);
-
   return (
     <main className="min-h-screen bg-[#f4f6f3] px-5 py-6 text-[#18211d]">
       <div className="mx-auto max-w-[1400px]">
@@ -53,7 +21,7 @@ export default function AiContextDebugPage() {
               This is the compressed JSON context sent to the AI layer after deterministic preprocessing.
             </p>
             <pre className="mt-4 max-h-[720px] overflow-auto rounded border border-[#dbe1d8] bg-white p-4 text-xs leading-5">
-              {loading ? "Loading context..." : JSON.stringify(payload?.context, null, 2)}
+              Run an investigation from the dashboard, then inspect the API response or extend this page with a selected investigation ID.
             </pre>
           </section>
 
@@ -61,13 +29,13 @@ export default function AiContextDebugPage() {
             <div className="panel">
               <h2 className="panel-title">Generated Prompt</h2>
               <pre className="mt-4 max-h-[420px] overflow-auto whitespace-pre-wrap rounded border border-[#dbe1d8] bg-white p-4 text-xs leading-5">
-                {loading ? "Loading prompt..." : payload?.prompt}
+                Manual-only mode is enabled. This page no longer triggers an investigation on load.
               </pre>
             </div>
             <div className="panel">
               <h2 className="panel-title">Copilot Response</h2>
               <div className="mt-4 rounded border border-[#dbe1d8] bg-white p-4 text-sm leading-6">
-                {loading ? "Loading answer..." : payload?.answer}
+                Choose station, metric, range, and question on the dashboard, then click Run investigation.
               </div>
             </div>
           </section>

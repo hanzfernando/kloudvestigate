@@ -143,6 +143,142 @@ textarea {
   padding: 10px 12px;
 }
 
+.stat-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.stat-card::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 4px;
+  background: #c9d4c8;
+}
+
+.stat-card-caution::before {
+  background: #b7791f;
+}
+
+.stat-card-warn::before,
+.stat-card-danger::before {
+  background: #b9472b;
+}
+
+.event-row,
+.outlier-row {
+  border: 1px solid #dbe1d8;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 12px;
+}
+
+.event-row-danger {
+  border-color: #e5b8aa;
+  background: #fff7f4;
+}
+
+.event-row-caution {
+  border-color: #e4cd9c;
+  background: #fffaf0;
+}
+
+.outlier-row {
+  border-color: #e6c4b9;
+  background: #fff9f6;
+}
+
+.count-chip,
+.mini-chip {
+  border-radius: 999px;
+  border: 1px solid #cfd7cc;
+  background: #ffffff;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.count-chip-danger,
+.mini-chip-danger {
+  border-color: #e1b0a2;
+  background: #fff1ed;
+  color: #92351f;
+}
+
+.count-chip-caution,
+.mini-chip-caution {
+  border-color: #dfc58d;
+  background: #fff8e8;
+  color: #755010;
+}
+
+.row-outlier td {
+  background: #fff4ef;
+}
+
+.row-spike td {
+  background: #fff9e9;
+}
+
+.markdown-response {
+  display: grid;
+  gap: 10px;
+}
+
+.markdown-response h2,
+.markdown-response h3 {
+  color: #1f2d25;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.markdown-response h2 {
+  font-size: 1rem;
+  margin-top: 4px;
+}
+
+.markdown-response h3 {
+  font-size: 0.92rem;
+}
+
+.markdown-response p {
+  margin: 0;
+}
+
+.markdown-response ul,
+.markdown-response ol {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.markdown-response li {
+  padding-left: 2px;
+}
+
+.markdown-response code {
+  border: 1px solid #dbe1d8;
+  border-radius: 4px;
+  background: #ffffff;
+  padding: 1px 4px;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 0.85em;
+}
+
+.markdown-response pre {
+  overflow-x: auto;
+  border: 1px solid #dbe1d8;
+  border-radius: 6px;
+  background: #ffffff;
+  padding: 10px;
+}
+
+.markdown-response pre code {
+  border: 0;
+  padding: 0;
+}
+
 .diagram-node {
   border: 1px solid #cfd7cc;
   border-radius: 8px;
