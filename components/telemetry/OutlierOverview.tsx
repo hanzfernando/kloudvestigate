@@ -132,7 +132,7 @@ function JoinedAuditTable({
       <table className="ops-table min-w-[1100px]">
         <thead>
           <tr>
-            <th className="sticky left-0 z-10">
+            <th className="sticky top-0 left-0 z-20 bg-[#eef2ec]">
               <SortableAuditHeader
                 label="Timestamp (PH)"
                 sortKey="timestamp"
@@ -142,7 +142,7 @@ function JoinedAuditTable({
               />
             </th>
             {metricColumns.map((metric) => (
-              <th key={metric.key}>
+              <th className="sticky top-0 z-10 bg-[#eef2ec]" key={metric.key}>
                 <SortableAuditHeader
                   label={metric.label}
                   sortKey={metric.key}

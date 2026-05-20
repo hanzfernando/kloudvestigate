@@ -1,19 +1,18 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
 import { CopilotPanel } from "./telemetry/CopilotPanel";
 import { EventsPanel } from "./telemetry/EventsPanel";
 import { FetchedValuesTable } from "./telemetry/FetchedValuesTable";
 import { InvestigationScopePanel } from "./telemetry/InvestigationScopePanel";
-import { IntervalSummaryTable } from "./telemetry/IntervalSummaryTable";
 import { OutlierOverview } from "./telemetry/OutlierOverview";
 import { SummaryStats } from "./telemetry/SummaryStats";
 import { TelemetryTimeline } from "./telemetry/TelemetryTimeline";
 import { metrics, questions } from "./telemetry/constants";
-import type { InvestigationResponse, SortDirection, SortKey, StationsResponse } from "./telemetry/types";
-import { getOutlierSets, philippineInputToUtcISOString, sortRecords, toInputValue } from "./telemetry/utils";
+import type { InvestigationResponse, StationsResponse } from "./telemetry/types";
+import { philippineInputToUtcISOString, toInputValue } from "./telemetry/utils";
 
 export function TelemetryInvestigationDashboard() {
   const [stationId, setStationId] = useState("station-001");
@@ -41,17 +40,6 @@ export function TelemetryInvestigationDashboard() {
   const [data, setData] = useState<InvestigationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [sortKey, setSortKey] = useState<SortKey>("timestamp");
-  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
-
-  const sortedRecords = useMemo(
-    () => sortRecords(data?.records ?? [], sortKey, sortDirection),
-    [data?.records, sortDirection, sortKey],
-  );
-  const outlierSets = useMemo(
-    () => getOutlierSets(data?.analysis),
-    [data?.analysis],
-  );
   const sourceLabel =
     data?.source === "kloudtrack" || stationSource === "kloudtrack"
       ? "KloudTrack API"
@@ -113,16 +101,6 @@ export function TelemetryInvestigationDashboard() {
     }
   }
 
-  function setSort(nextKey: SortKey) {
-    if (sortKey === nextKey) {
-      setSortDirection((current) => (current === "asc" ? "desc" : "asc"));
-      return;
-    }
-
-    setSortKey(nextKey);
-    setSortDirection("asc");
-  }
-
   return (
     <div className="min-h-screen bg-[#f4f6f3] text-[#18211d]">
       <header className="border-b border-[#d8ded5] bg-[#fbfcfa]">
@@ -168,15 +146,11 @@ export function TelemetryInvestigationDashboard() {
           <SummaryStats analysis={data?.analysis} />
           <OutlierOverview analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
           <TelemetryTimeline analysis={data?.analysis} sourceLabel={sourceLabel} />
-          <EventsPanel analysis={data?.analysis} />
-          <IntervalSummaryTable analysis={data?.analysis} />
+          <EventsPanel analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
           <FetchedValuesTable
-            records={sortedRecords}
-            sortKey={sortKey}
-            sortDirection={sortDirection}
-            rangeTimestamps={outlierSets.rangeTimestamps}
-            spikeTimestamps={outlierSets.spikeTimestamps}
-            onSort={setSort}
+            analysis={data?.analysis}
+            records={data?.records ?? []}
+            metricAnalyses={data?.metricAnalyses}
           />
         </section>
 

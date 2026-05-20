@@ -53,7 +53,14 @@ export async function POST(request: Request) {
     const askCopilot = body.askCopilot ?? false;
     const selection = parseSelection(body);
     const source = await loadTelemetry(selection, requestedDemoData);
-    const metricAnalyses = analyzeMetricSeries(source.series, selection);
+    const aggregatedSource = {
+      station: source.station,
+      series: source.series.map((item) => ({
+        metric: item.metric,
+        records: aggregateTelemetryRecords(item.records, selection.start, selection.aggregationMinutes),
+      })),
+    };
+    const metricAnalyses = analyzeMetricSeries(aggregatedSource.series, selection);
     const primary = metricAnalyses[0];
     if (!primary) throw new Error("No telemetry records were available for the selected metric.");
 
@@ -187,7 +194,7 @@ async function loadTelemetry(selection: InvestigationSelection, useDemoData: boo
     {
       skip: "0",
       take: "2000",
-      interval: "1",
+      interval: selection.aggregationMinutes.toString(),
       startDate: selection.start,
       endDate: selection.end,
     },
@@ -215,7 +222,7 @@ async function loadAllTelemetry(selection: InvestigationSelection, useDemoData: 
   const raw = await getAllTelemetryHistoryFromKloudtrackApi(selection.stationId, {
     skip: "0",
     take: "2000",
-    interval: "1",
+    interval: selection.aggregationMinutes.toString(),
     startDate: selection.start,
     endDate: selection.end,
   });
@@ -233,7 +240,40 @@ function analyzeMetricSeries(
       start: selection.start,
       end: selection.end,
       aggregationMinutes: selection.aggregationMinutes,
+      expectedIntervalMinutes: selection.aggregationMinutes,
       metricProfile: getMetricAnalysisProfile(item.metric),
     }),
   }));
+}
+
+function aggregateTelemetryRecords(
+  records: TelemetryRecord[],
+  start: string,
+  aggregationMinutes: number,
+): TelemetryRecord[] {
+  const startMs = Date.parse(start);
+  const bucketMs = aggregationMinutes * 60_000;
+  const buckets = new Map<number, TelemetryRecord[]>();
+
+  for (const record of records) {
+    const time = Date.parse(record.timestamp);
+    if (Number.isNaN(time)) continue;
+
+    const bucketStart = startMs + Math.floor((time - startMs) / bucketMs) * bucketMs;
+    const bucketRecords = buckets.get(bucketStart) ?? [];
+    bucketRecords.push(record);
+    buckets.set(bucketStart, bucketRecords);
+  }
+
+  return [...buckets.entries()]
+    .sort(([a], [b]) => a - b)
+    .map(([bucketStart, bucketRecords]) => ({
+      id: bucketRecords.at(-1)?.id,
+      timestamp: new Date(bucketStart).toISOString(),
+      value: Number(
+        (
+          bucketRecords.reduce((sum, record) => sum + record.value, 0) / bucketRecords.length
+        ).toFixed(2),
+      ),
+    }));
 }

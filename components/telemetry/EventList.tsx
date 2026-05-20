@@ -1,28 +1,50 @@
-export function EventList({
-  title,
-  empty,
-  items,
-  tone = "neutral",
-}: {
+import { useMemo, useState } from "react";
+
+interface EventListProps {
   title: string;
   empty: string;
-  items: Array<{ primary: string; secondary: string }>;
-  tone?: "neutral" | "danger" | "caution";
-}) {
+  items: { primary: string; secondary: string }[];
+  tone?: "neutral" | "caution" | "critical";
+  maxVisible?: number;
+}
+
+export function EventList({ title, empty, items, tone = "neutral", maxVisible = 6 }: EventListProps) {
+  const [expanded, setExpanded] = useState(false);
+  const hasOverflow = items.length > maxVisible;
+  const visibleItems = useMemo(
+    () => (expanded ? items : items.slice(0, maxVisible)),
+    [expanded, items, maxVisible],
+  );
+  const styleTone = tone === "critical" ? "danger" : tone;
+
   return (
-    <div className="panel">
-      <div className="flex items-center justify-between gap-3">
-        <h2 className="panel-title">{title}</h2>
-        <span className={`count-chip count-chip-${tone}`}>{items.length}</span>
+    <div className="event-card rounded-lg border border-[#d8ded5] bg-white p-3 shadow-[0_1px_0_rgba(24,33,29,0.03)]">
+      <div className="card-header">
+        <span className="card-label">{title}</span>
+        <span className={`count-chip count-chip-${styleTone}`}>{items.length}</span>
       </div>
-      <div className="mt-3 grid max-h-[320px] gap-2 overflow-auto pr-1">
-        {items.length ? items.map((item) => (
-          <div className={`event-row event-row-${tone}`} key={`${item.primary}-${item.secondary}`}>
-            <p className="font-mono text-sm">{item.primary}</p>
-            <p className="mt-1 text-sm text-[#5f6b63]">{item.secondary}</p>
-          </div>
-        )) : <p className="text-sm text-[#5f6b63]">{empty}</p>}
+      <div className="card-body mt-2 grid gap-2">
+        {visibleItems.length
+          ? visibleItems.map(item => (
+              <div
+                className={`event-row event-row-${styleTone}`}
+                key={`${item.primary}-${item.secondary}`}
+              >
+                <p className="font-mono text-xs font-medium">{item.primary}</p>
+                <p className="text-xs text-muted mt-0.5">{item.secondary}</p>
+              </div>
+            ))
+          : <p className="empty-state">{empty}</p>
+        }
       </div>
+
+      {hasOverflow && (
+        <div className="mt-2 border-t border-[#e1e7de] pt-2">
+          <button className="nav-pill w-full" type="button" onClick={() => setExpanded((current) => !current)}>
+            {expanded ? "Show less" : `Show ${items.length - visibleItems.length} more`}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
