@@ -6,8 +6,15 @@ import type {
 } from "@/lib/telemetry-types";
 import type { SortDirection, SortKey } from "./types";
 
+const philippineOffsetMs = 8 * 60 * 60_000;
+
 export function toInputValue(date: Date) {
-  return date.toISOString().slice(0, 16);
+  return new Date(date.getTime() + philippineOffsetMs).toISOString().slice(0, 16);
+}
+
+export function philippineInputToUtcISOString(value: string) {
+  const inputWithSeconds = value.length === 16 ? `${value}:00` : value;
+  return new Date(`${inputWithSeconds}+08:00`).toISOString();
 }
 
 export function formatTime(value?: string | null) {

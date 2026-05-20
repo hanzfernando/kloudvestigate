@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
-import type { MetricKey, StationMetadata } from "@/lib/telemetry-types";
+import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
 import { CopilotPanel } from "./telemetry/CopilotPanel";
 import { EventsPanel } from "./telemetry/EventsPanel";
 import { FetchedValuesTable } from "./telemetry/FetchedValuesTable";
@@ -13,17 +13,30 @@ import { SummaryStats } from "./telemetry/SummaryStats";
 import { TelemetryTimeline } from "./telemetry/TelemetryTimeline";
 import { metrics, questions } from "./telemetry/constants";
 import type { InvestigationResponse, SortDirection, SortKey, StationsResponse } from "./telemetry/types";
-import { getOutlierSets, sortRecords, toInputValue } from "./telemetry/utils";
+import { getOutlierSets, philippineInputToUtcISOString, sortRecords, toInputValue } from "./telemetry/utils";
 
 export function TelemetryInvestigationDashboard() {
-  const now = useMemo(() => new Date("2026-05-20T16:00:00.000Z"), []);
   const [stationId, setStationId] = useState("station-001");
   const [stations, setStations] = useState<StationMetadata[]>([]);
   const [stationSource, setStationSource] = useState<"demo" | "kloudtrack">("demo");
-  const [metric, setMetric] = useState<MetricKey>("calculatedWaterLevel");
+  const [metric, setMetric] = useState<InvestigationMetricKey>("all");
   const [aggregationMinutes, setAggregationMinutes] = useState(60);
-  const [start, setStart] = useState(toInputValue(new Date(now.getTime() - 12 * 60 * 60_000)));
-  const [end, setEnd] = useState(toInputValue(now));
+  const [start, setStart] = useState(() => {
+    const date = new Date();
+
+    date.setDate(date.getDate() - 1);
+    date.setHours(0, 0, 0, 0);
+
+    return toInputValue(date);
+  });
+
+  const [end, setEnd] = useState(() => {
+    const date = new Date();
+
+    date.setHours(12, 0, 0, 0);
+
+    return toInputValue(date);
+  });
   const [question, setQuestion] = useState(questions[0]);
   const [data, setData] = useState<InvestigationResponse | null>(null);
   const [loading, setLoading] = useState(false);
@@ -83,8 +96,8 @@ export function TelemetryInvestigationDashboard() {
           stationId: selectedStationId,
           metric,
           aggregationMinutes,
-          start: new Date(start).toISOString(),
-          end: new Date(end).toISOString(),
+          start: philippineInputToUtcISOString(start),
+          end: philippineInputToUtcISOString(end),
           question: nextQuestion,
           askCopilot,
           useDemoData: false,
@@ -153,7 +166,7 @@ export function TelemetryInvestigationDashboard() {
         <section className="grid gap-4">
           {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
           <SummaryStats analysis={data?.analysis} />
-          <OutlierOverview analysis={data?.analysis} />
+          <OutlierOverview analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
           <TelemetryTimeline analysis={data?.analysis} sourceLabel={sourceLabel} />
           <EventsPanel analysis={data?.analysis} />
           <IntervalSummaryTable analysis={data?.analysis} />

@@ -1,6 +1,7 @@
 import type { MetricOption } from "./types";
 
 export const metrics: MetricOption[] = [
+  { label: "All", value: "all" },
   { label: "Temperature", value: "temperature" },
   { label: "Humidity", value: "humidity" },
   { label: "Heat Index", value: "heatIndex" },

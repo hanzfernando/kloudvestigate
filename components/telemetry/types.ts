@@ -1,6 +1,7 @@
 import type {
   InvestigationContext,
   InvestigationSelection,
+  InvestigationMetricKey,
   MetricKey,
   PointMatch,
   StationMetadata,
@@ -16,7 +17,13 @@ export type SourceKind = "demo" | "kloudtrack";
 
 export interface MetricOption {
   label: string;
-  value: MetricKey;
+  value: InvestigationMetricKey;
+}
+
+export interface MetricInvestigationAnalysis {
+  metric: MetricKey;
+  analysis: TelemetryAnalysis;
+  records: TelemetryRecord[];
 }
 
 export interface StationsResponse {
@@ -38,5 +45,6 @@ export interface InvestigationResponse {
   aiProvider: "gemini" | "deterministic" | null;
   aiError?: string;
   records: TelemetryRecord[];
+  metricAnalyses?: MetricInvestigationAnalysis[];
   source: SourceKind;
 }

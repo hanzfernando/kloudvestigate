@@ -1,5 +1,20 @@
 import type { MetricAnalysisProfile, MetricKey } from "./telemetry-types";
 
+export const allMetricKeys: MetricKey[] = [
+  "temperature",
+  "humidity",
+  "pressure",
+  "heatIndex",
+  "windDirection",
+  "windSpeed",
+  "precipitation",
+  "rainfall",
+  "uvIndex",
+  "distance",
+  "calculatedWaterLevel",
+  "lightIntensity",
+];
+
 export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = {
   temperature: {
     metric: "temperature",

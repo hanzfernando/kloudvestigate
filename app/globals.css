@@ -220,6 +220,30 @@ textarea {
   background: #fff9e9;
 }
 
+.audit-cell {
+  min-width: 130px;
+  background: #ffffff;
+  vertical-align: top;
+}
+
+.audit-cell-range {
+  border-left: 3px solid #b9472b;
+  background: #fff1ed;
+  color: #6f2718;
+}
+
+.audit-cell-spike {
+  border-left: 3px solid #b7791f;
+  background: #fff8e8;
+  color: #62420d;
+}
+
+.audit-cell-both {
+  border-left: 3px solid #8f2f1f;
+  background: #ffe7df;
+  color: #5f2115;
+}
+
 .markdown-response {
   display: grid;
   gap: 10px;

@@ -2,17 +2,27 @@ import { buildAiPrompt, buildInvestigationContext, explainFindings } from "@/lib
 import { assertInternalAccess, writeAuditEvent } from "@/lib/auth";
 import { generateGeminiAnswer } from "@/lib/gemini";
 import {
+  getAllTelemetryHistoryFromKloudtrackApi,
   getTelemetryMetricHistoryFromKloudtrackApi,
+  normalizeAllTelemetry,
   normalizeTelemetry,
 } from "@/lib/kloudtrack-api";
-import { getMetricAnalysisProfile } from "@/lib/metric-profiles";
+import { allMetricKeys, getMetricAnalysisProfile } from "@/lib/metric-profiles";
 import { createDemoTelemetry } from "@/lib/mock-telemetry";
 import { analyzeTelemetry, defaultWarningLevels, findPointInTime } from "@/lib/telemetry-analysis";
-import type { InvestigationSelection, MetricKey } from "@/lib/telemetry-types";
+import type {
+  InvestigationMetricKey,
+  InvestigationSelection,
+  MetricKey,
+  StationMetadata,
+  TelemetryAnalysis,
+  TelemetryRecord,
+} from "@/lib/telemetry-types";
 
 export const dynamic = "force-dynamic";
 
-const validMetrics: MetricKey[] = [
+const validMetrics: InvestigationMetricKey[] = [
+  "all",
   "temperature",
   "humidity",
   "pressure",
@@ -43,24 +53,22 @@ export async function POST(request: Request) {
     const askCopilot = body.askCopilot ?? false;
     const selection = parseSelection(body);
     const source = await loadTelemetry(selection, requestedDemoData);
-    const analysis = analyzeTelemetry(source.records, defaultWarningLevels, {
-      start: selection.start,
-      end: selection.end,
-      aggregationMinutes: selection.aggregationMinutes,
-      metricProfile: getMetricAnalysisProfile(selection.metric),
-    });
+    const metricAnalyses = analyzeMetricSeries(source.series, selection);
+    const primary = metricAnalyses[0];
+    if (!primary) throw new Error("No telemetry records were available for the selected metric.");
+
     const context = buildInvestigationContext(
       source.station,
-      selection.metric,
+      primary.metric,
       selection,
-      analysis,
+      primary.analysis,
       defaultWarningLevels,
-      source.records.length,
+      primary.records.length,
     );
     const question = body.question || "Summarize the selected telemetry range.";
     const prompt = askCopilot ? buildAiPrompt(context, question) : null;
     const pointMatch = body.pointTimestamp
-      ? findPointInTime(source.records, body.pointTimestamp)
+      ? findPointInTime(primary.records, body.pointTimestamp)
       : null;
     const deterministicAnswer = askCopilot ? explainFindings(context, question) : null;
     const aiResult = prompt && deterministicAnswer
@@ -81,14 +89,15 @@ export async function POST(request: Request) {
     return Response.json({
       selection,
       station: source.station,
-      analysis,
+      analysis: primary.analysis,
       context,
       prompt,
       pointMatch,
       answer: aiResult?.answer ?? null,
       aiProvider: aiResult?.provider ?? null,
       aiError: aiResult?.error,
-      records: source.records,
+      records: primary.records,
+      metricAnalyses,
       source: requestedDemoData || !process.env.KLOUDTRACK_API_TOKEN ? "demo" : "kloudtrack",
     });
   } catch (error) {
@@ -151,14 +160,25 @@ function parseSelection(
   };
 }
 
-async function loadTelemetry(selection: InvestigationSelection, useDemoData: boolean) {
+async function loadTelemetry(selection: InvestigationSelection, useDemoData: boolean): Promise<{
+  station: StationMetadata;
+  series: Array<{ metric: MetricKey; records: TelemetryRecord[] }>;
+}> {
+  if (selection.metric === "all") {
+    return loadAllTelemetry(selection, useDemoData);
+  }
+
   if (useDemoData || !process.env.KLOUDTRACK_API_TOKEN) {
-    return createDemoTelemetry(
+    const demo = createDemoTelemetry(
       selection.stationId,
       selection.metric,
       selection.start,
       selection.end,
     );
+    return {
+      station: demo.station,
+      series: [{ metric: selection.metric, records: demo.records }],
+    };
   }
 
   const raw = await getTelemetryMetricHistoryFromKloudtrackApi(
@@ -173,5 +193,47 @@ async function loadTelemetry(selection: InvestigationSelection, useDemoData: boo
     },
   );
 
-  return normalizeTelemetry(raw);
+  const normalized = normalizeTelemetry(raw);
+  return {
+    station: normalized.station,
+    series: [{ metric: selection.metric, records: normalized.records }],
+  };
+}
+
+async function loadAllTelemetry(selection: InvestigationSelection, useDemoData: boolean) {
+  if (useDemoData || !process.env.KLOUDTRACK_API_TOKEN) {
+    const demoSeries = allMetricKeys.map((metric) => {
+      const demo = createDemoTelemetry(selection.stationId, metric, selection.start, selection.end);
+      return { metric, records: demo.records, station: demo.station };
+    });
+    return {
+      station: demoSeries[0].station,
+      series: demoSeries.map(({ metric, records }) => ({ metric, records })),
+    };
+  }
+
+  const raw = await getAllTelemetryHistoryFromKloudtrackApi(selection.stationId, {
+    skip: "0",
+    take: "2000",
+    interval: "1",
+    startDate: selection.start,
+    endDate: selection.end,
+  });
+  return normalizeAllTelemetry(raw);
+}
+
+function analyzeMetricSeries(
+  series: Array<{ metric: MetricKey; records: TelemetryRecord[] }>,
+  selection: InvestigationSelection,
+): Array<{ metric: MetricKey; analysis: TelemetryAnalysis; records: TelemetryRecord[] }> {
+  return series.map((item) => ({
+    metric: item.metric,
+    records: item.records,
+    analysis: analyzeTelemetry(item.records, defaultWarningLevels, {
+      start: selection.start,
+      end: selection.end,
+      aggregationMinutes: selection.aggregationMinutes,
+      metricProfile: getMetricAnalysisProfile(item.metric),
+    }),
+  }));
 }

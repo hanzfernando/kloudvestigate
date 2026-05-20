@@ -5,6 +5,7 @@ import type {
   TelemetryHistoryMetricRaw,
   TelemetryRecord,
 } from "./telemetry-types";
+import { allMetricKeys } from "./metric-profiles";
 
 const KLOUDTRACK_API_BASE_URL =
   process.env.KLOUDTRACK_API_BASE_URL || "https://api.kloudtechsea.com/api/v1";
@@ -82,6 +83,14 @@ export async function getTelemetryMetricHistoryFromKloudtrackApi(
   };
 }
 
+export async function getAllTelemetryHistoryFromKloudtrackApi(
+  stationId: string,
+  params: Record<string, string>,
+): Promise<TelemetryHistoryMetricRaw> {
+  const queryString = new URLSearchParams(params).toString();
+  return kloudtrackApi.get<TelemetryHistoryMetricRaw>(`/telemetry/station/${stationId}/history?${queryString}`);
+}
+
 export async function getDashboardDataFromKloudtrackApi(): Promise<DashboardRaw> {
   return kloudtrackApi.get<DashboardRaw>("/telemetry/dashboard");
 }
@@ -115,7 +124,32 @@ export function normalizeTelemetry(raw: TelemetryHistoryMetricRaw): {
       id: record.id,
       timestamp: new Date(record.recordedAt).toISOString(),
       value: Number(record.value),
-    })),
+    })).filter((record) => Number.isFinite(record.value)),
+  };
+}
+
+export function normalizeAllTelemetry(raw: TelemetryHistoryMetricRaw): {
+  station: StationMetadata;
+  series: Array<{ metric: MetricKey; records: TelemetryRecord[] }>;
+} {
+  const telemetry = raw.telemetry ?? [];
+  return {
+    station: normalizeStation(raw.station),
+    series: allMetricKeys
+      .map((metric) => ({
+        metric,
+        records: telemetry
+          .map((record) => {
+            const value = readMetricValue(record, metric);
+            return {
+              id: record.id,
+              timestamp: new Date(record.recordedAt).toISOString(),
+              value: Number(value),
+            };
+          })
+          .filter((record) => Number.isFinite(record.value)),
+      }))
+      .filter((item) => item.records.length > 0),
   };
 }
 
@@ -146,4 +180,13 @@ function resolveHistoryEndpoint(
     path: `/telemetry/station/${stationId}/history/${parameter}`,
     responseKey: "telemetry",
   };
+}
+
+function readMetricValue(
+  record: NonNullable<TelemetryHistoryMetricRaw["telemetry"]>[number],
+  metric: MetricKey,
+): number | undefined {
+  if (metric === "windDirection") return record.wind?.direction ?? record.windDirection;
+  if (metric === "windSpeed") return record.wind?.speed ?? record.windSpeed;
+  return record[metric];
 }

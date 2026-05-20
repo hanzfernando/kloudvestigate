@@ -1,4 +1,4 @@
-import type { MetricKey } from "@/lib/telemetry-types";
+import type { InvestigationMetricKey } from "@/lib/telemetry-types";
 import { MarkdownRenderer } from "./MarkdownRenderer";
 import type { InvestigationResponse } from "./types";
 
@@ -11,7 +11,7 @@ export function CopilotPanel({
   onRun,
 }: {
   question: string;
-  metric: MetricKey;
+  metric: InvestigationMetricKey;
   data: InvestigationResponse | null;
   loading: boolean;
   onQuestionChange: (value: string) => void;

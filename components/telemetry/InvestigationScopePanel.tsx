@@ -1,4 +1,4 @@
-import type { MetricKey, StationMetadata } from "@/lib/telemetry-types";
+import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
 import type { MetricOption } from "./types";
 import { questions } from "./constants";
 
@@ -20,14 +20,14 @@ export function InvestigationScopePanel({
 }: {
   stations: StationMetadata[];
   stationId: string;
-  metric: MetricKey;
+  metric: InvestigationMetricKey;
   metrics: MetricOption[];
   start: string;
   end: string;
   aggregationMinutes: number;
   question: string;
   onStationChange: (value: string) => void;
-  onMetricChange: (value: MetricKey) => void;
+  onMetricChange: (value: InvestigationMetricKey) => void;
   onStartChange: (value: string) => void;
   onEndChange: (value: string) => void;
   onAggregationChange: (value: number) => void;
@@ -48,16 +48,16 @@ export function InvestigationScopePanel({
       </label>
       <label className="field-label">
         Metric
-        <select className="field" value={metric} onChange={(event) => onMetricChange(event.target.value as MetricKey)}>
+        <select className="field" value={metric} onChange={(event) => onMetricChange(event.target.value as InvestigationMetricKey)}>
           {metrics.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
         </select>
       </label>
       <label className="field-label">
-        Start
+        Start (PH)
         <input className="field" type="datetime-local" value={start} onChange={(event) => onStartChange(event.target.value)} />
       </label>
       <label className="field-label">
-        End
+        End (PH)
         <input className="field" type="datetime-local" value={end} onChange={(event) => onEndChange(event.target.value)} />
       </label>
       <label className="field-label">

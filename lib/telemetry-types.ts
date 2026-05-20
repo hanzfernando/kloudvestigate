@@ -12,6 +12,8 @@ export type MetricKey =
   | "calculatedWaterLevel"
   | "lightIntensity";
 
+export type InvestigationMetricKey = MetricKey | "all";
+
 export type WarningName = "Normal" | "Advisory" | "Watch" | "Warning" | "Critical";
 
 export interface StationRaw {
@@ -34,7 +36,23 @@ export interface TelemetryMetricRaw {
   id: number;
   recordedAt: string;
   createdAt?: string;
-  value: number;
+  value?: number;
+  temperature?: number;
+  humidity?: number;
+  pressure?: number;
+  heatIndex?: number;
+  wind?: {
+    direction?: number;
+    speed?: number;
+  };
+  windDirection?: number;
+  windSpeed?: number;
+  precipitation?: number;
+  rainfall?: number;
+  uvIndex?: number;
+  distance?: number;
+  calculatedWaterLevel?: number;
+  lightIntensity?: number;
 }
 
 export interface TelemetryHistoryMetricRaw {
@@ -68,7 +86,7 @@ export interface WarningLevel {
 
 export interface InvestigationSelection {
   stationId: string;
-  metric: MetricKey;
+  metric: InvestigationMetricKey;
   start: string;
   end: string;
   aggregationMinutes: number;
@@ -179,7 +197,7 @@ export interface TelemetryAnalysis {
 
 export interface InvestigationContext {
   station: StationMetadata;
-  metric: MetricKey;
+  metric: InvestigationMetricKey;
   metricProfile: MetricAnalysisProfile;
   timeRange: { start: string; end: string };
   latestTimestamp: string | null;
