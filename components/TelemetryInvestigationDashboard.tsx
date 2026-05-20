@@ -239,7 +239,10 @@ export function TelemetryInvestigationDashboard() {
         <section className="grid gap-4">
           {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
           {quickActionError ? <div className="panel border-[#c76f59] text-[#843722]">{quickActionError}</div> : null}
-          <SummaryStats analysis={displayedData?.analysis} />
+          <SummaryStats
+            analysis={displayedData?.analysis}
+            metricAnalyses={displayedData?.metricAnalyses}
+          />
           <OutlierOverview analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
           <TelemetryTimeline
             analysis={displayedData?.analysis}
