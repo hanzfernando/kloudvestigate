@@ -44,7 +44,40 @@ export interface InvestigationResponse {
   answer: string | null;
   aiProvider: "gemini" | "deterministic" | null;
   aiError?: string;
+  aiWarning?: string;
+  aiFinishReason?: string;
   records: TelemetryRecord[];
   metricAnalyses?: MetricInvestigationAnalysis[];
   source: SourceKind;
+}
+
+export type PubmatQuickFetchStatus = "ready" | "attention" | "missing" | "failed";
+
+export interface PubmatBucketWindow {
+  bucketStart: string;
+  bucketEnd: string;
+  fetchStart: string;
+  fetchEnd: string;
+}
+
+export interface PubmatQuickFetchResult {
+  station: StationMetadata;
+  status: PubmatQuickFetchStatus;
+  values: Partial<Record<MetricKey, number>>;
+  classifications: string[];
+  error?: string;
+}
+
+export interface PubmatQuickFetchResponse {
+  selection: {
+    metric: InvestigationMetricKey;
+    intervalMinutes: number;
+    requestGapMs: number;
+    selectedMetricKeys: MetricKey[];
+    timestamp: string;
+  };
+  window: PubmatBucketWindow;
+  source: SourceKind;
+  stationCount: number;
+  results: PubmatQuickFetchResult[];
 }

@@ -101,6 +101,8 @@ export async function POST(request: Request) {
       answer: aiResult?.answer ?? null,
       aiProvider: aiResult?.provider ?? null,
       aiError: aiResult?.error,
+      aiWarning: aiResult?.warning,
+      aiFinishReason: aiResult?.finishReason,
       records: primary.records,
       metricAnalyses,
       source: requestedDemoData || !process.env.KLOUDTRACK_API_TOKEN ? "demo" : "kloudtrack",
@@ -119,15 +121,24 @@ export async function POST(request: Request) {
 async function generateAnswer(
   prompt: string,
   fallbackAnswer: string,
-): Promise<{ answer: string; provider: "gemini" | "deterministic"; error?: string }> {
+): Promise<{
+  answer: string;
+  provider: "gemini" | "deterministic";
+  error?: string;
+  warning?: string;
+  finishReason?: string;
+}> {
   if (!process.env.GEMINI_API_KEY) {
     return { answer: fallbackAnswer, provider: "deterministic" };
   }
 
   try {
+    const result = await generateGeminiAnswer(prompt);
     return {
-      answer: await generateGeminiAnswer(prompt),
+      answer: result.answer,
       provider: "gemini",
+      warning: result.warning,
+      finishReason: result.finishReason,
     };
   } catch (error) {
     return {

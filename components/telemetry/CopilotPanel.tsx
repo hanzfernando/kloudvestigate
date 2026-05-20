@@ -49,6 +49,12 @@ export function CopilotPanel({
         </p>
       ) : null}
 
+      {data?.aiWarning ? (
+        <p className="mt-3 rounded-md border border-[#dfc58d] bg-[#fff8e8] p-3 text-sm text-[#755010]">
+          {data.aiWarning}
+        </p>
+      ) : null}
+
       <div className="mt-4 border-t border-[#dbe1d8] pt-4 text-sm leading-6 text-[#26372d]">
         {data?.answer ? (
           <MarkdownRenderer text={data.answer} />
@@ -63,6 +69,7 @@ export function CopilotPanel({
         <div className="mt-4 grid gap-2 border-t border-[#dbe1d8] pt-4 text-xs text-[#68766d]">
           <p>Station: {data.station.name}</p>
           <p>Records analyzed: {data.records.length}</p>
+          {data.aiFinishReason ? <p>AI finish reason: {data.aiFinishReason}</p> : null}
           <p>Source: {data.source === "kloudtrack" ? "KloudTrack API" : "Demo fallback"}</p>
         </div>
       ) : null}
