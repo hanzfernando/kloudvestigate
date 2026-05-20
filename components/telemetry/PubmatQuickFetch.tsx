@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Clipboard, Loader2, Play, Square } from "lucide-react";
 import { allMetricKeys, getMetricAnalysisProfile } from "@/lib/metric-profiles";
 import type { InvestigationMetricKey, MetricKey, StationMetadata } from "@/lib/telemetry-types";
@@ -48,17 +48,23 @@ const intervalOptions = [
 ];
 
 export function PubmatQuickFetch({
+  autoRun = false,
+  initialIntervalMinutes = 60,
+  initialMetric = "rainfall",
   metrics,
 }: {
+  autoRun?: boolean;
+  initialIntervalMinutes?: number;
+  initialMetric?: InvestigationMetricKey;
   metrics: MetricOption[];
 }) {
-  const [metric, setMetric] = useState<InvestigationMetricKey>("rainfall");
+  const [metric, setMetric] = useState<InvestigationMetricKey>(initialMetric);
   const [timestamp, setTimestamp] = useState(() => {
     const date = new Date();
     date.setMinutes(0, 0, 0);
     return toInputValue(date);
   });
-  const [intervalMinutes, setIntervalMinutes] = useState(60);
+  const [intervalMinutes, setIntervalMinutes] = useState(initialIntervalMinutes);
   const [requestGapMs, setRequestGapMs] = useState(600);
   const [results, setResults] = useState<QuickFetchResult[]>([]);
   const [responseWindow, setResponseWindow] = useState<BucketWindow | null>(null);
@@ -67,6 +73,7 @@ export function PubmatQuickFetch({
   const [error, setError] = useState<string | null>(null);
   const [copyState, setCopyState] = useState<"idle" | "copied" | "failed">("idle");
   const abortControllerRef = useRef<AbortController | null>(null);
+  const autoRunStartedRef = useRef(false);
 
   const selectedMetricKeys = useMemo(
     () => metric === "all" ? allMetricKeys : [metric],
@@ -85,7 +92,7 @@ export function PubmatQuickFetch({
       : "All stations queued";
   const rateLabel = `${(1000 / safeGapMs).toFixed(1)} req/sec`;
 
-  async function runQuickFetch() {
+  const runQuickFetch = useCallback(async () => {
     setRunning(true);
     setError(null);
     setResults([]);
@@ -126,7 +133,14 @@ export function PubmatQuickFetch({
       abortControllerRef.current = null;
       setRunning(false);
     }
-  }
+  }, [intervalMinutes, metric, safeGapMs, timestamp]);
+
+  useEffect(() => {
+    if (!autoRun || autoRunStartedRef.current) return;
+
+    autoRunStartedRef.current = true;
+    void runQuickFetch();
+  }, [autoRun, runQuickFetch]);
 
   function stopQuickFetch() {
     abortControllerRef.current?.abort();

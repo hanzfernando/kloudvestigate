@@ -32,8 +32,6 @@ const validMetrics: InvestigationMetricKey[] = [
   "precipitation",
   "rainfall",
   "uvIndex",
-  "distance",
-  "calculatedWaterLevel",
   "lightIntensity",
 ];
 
@@ -145,7 +143,7 @@ function parseSelection(
 ): InvestigationSelection {
   const metric = body.metric && validMetrics.includes(body.metric)
     ? body.metric
-    : "calculatedWaterLevel";
+    : "rainfall";
   const end = body.end ? new Date(body.end) : new Date();
   const start = body.start
     ? new Date(body.start)

@@ -1,6 +1,13 @@
+import Link from "next/link";
 import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
 import type { MetricOption } from "./types";
-import { questions } from "./constants";
+
+const quickCommands: Array<{ label: string; href: string }> = [
+  { label: "Get Pubmat Heat Index (2PM)", href: "/pubmat?metric=heatIndex&interval=60&run=1" },
+  { label: "Get Pubmat Temperature (2PM)", href: "/pubmat?metric=temperature&interval=60&run=1" },
+  // { label: "Get Pubmat Rainfall (2PM)", href: "/pubmat?metric=rainfall&interval=60&run=1" },
+  // { label: "Get Pubmat All Metrics (2PM)", href: "/pubmat?metric=all&interval=60&run=1" },
+];
 
 export function InvestigationScopePanel({
   stations,
@@ -10,13 +17,11 @@ export function InvestigationScopePanel({
   start,
   end,
   aggregationMinutes,
-  question,
   onStationChange,
   onMetricChange,
   onStartChange,
   onEndChange,
   onAggregationChange,
-  onQuestionChange,
 }: {
   stations: StationMetadata[];
   stationId: string;
@@ -25,13 +30,11 @@ export function InvestigationScopePanel({
   start: string;
   end: string;
   aggregationMinutes: number;
-  question: string;
   onStationChange: (value: string) => void;
   onMetricChange: (value: InvestigationMetricKey) => void;
   onStartChange: (value: string) => void;
   onEndChange: (value: string) => void;
   onAggregationChange: (value: number) => void;
-  onQuestionChange: (value: string) => void;
 }) {
   return (
     <aside className="panel h-fit">
@@ -73,23 +76,15 @@ export function InvestigationScopePanel({
         </select>
       </label>
       <div className="mt-4 border-t border-[#dbe1d8] pt-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Quick questions</p>
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Quick commands</p>
         <div className="mt-3 grid gap-2">
-          {questions.map((item) => (
-            <button
-              className="question-button"
-              key={item}
-              type="button"
-              onClick={() => onQuestionChange(item)}
-            >
-              {item}
-            </button>
+          {quickCommands.map((item) => (
+            <Link className="question-button" href={item.href} key={item.href}>
+              {item.label}
+            </Link>
           ))}
         </div>
       </div>
-      <p className="mt-4 text-xs leading-5 text-[#68766d]">
-        Current question: {question}
-      </p>
     </aside>
   );
 }

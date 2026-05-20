@@ -41,7 +41,7 @@ export function analyzeTelemetry(
   options: AnalyzeTelemetryOptions,
 ): TelemetryAnalysis {
   const expectedIntervalMinutes = options.expectedIntervalMinutes ?? 1;
-  const metricProfile = options.metricProfile ?? getMetricAnalysisProfile("calculatedWaterLevel");
+  const metricProfile = options.metricProfile ?? getMetricAnalysisProfile("rainfall");
   const spikeDelta = metricProfile.spikeDelta;
   const flatlineMinutes = options.flatlineMinutes ?? metricProfile.flatlineMinutes;
   const staleAfterMinutes = options.staleAfterMinutes ?? 15;

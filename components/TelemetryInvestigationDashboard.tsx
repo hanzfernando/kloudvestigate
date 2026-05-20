@@ -133,13 +133,11 @@ export function TelemetryInvestigationDashboard() {
           start={start}
           end={end}
           aggregationMinutes={aggregationMinutes}
-          question={question}
           onStationChange={setStationId}
           onMetricChange={setMetric}
           onStartChange={setStart}
           onEndChange={setEnd}
           onAggregationChange={setAggregationMinutes}
-          onQuestionChange={setQuestion}
         />
 
         <section className="grid gap-4">
