@@ -1,26 +1,158 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #f4f6f3;
+  --foreground: #18211d;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+select,
+input,
+textarea {
+  font: inherit;
+}
+
+.panel {
+  border: 1px solid #d8ded5;
+  border-radius: 8px;
+  background: #fbfcfa;
+  padding: 16px;
+  box-shadow: 0 1px 0 rgba(24, 33, 29, 0.04);
+}
+
+.panel-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #26372d;
+}
+
+.field-label {
+  margin-top: 14px;
+  display: grid;
+  gap: 6px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #4d5d53;
+}
+
+.field {
+  min-height: 42px;
+  width: 100%;
+  border-radius: 6px;
+  border: 1px solid #cfd7cc;
+  background: #ffffff;
+  padding: 10px 11px;
+  color: #18211d;
+  outline: none;
+}
+
+.field:focus {
+  border-color: #2d6a4f;
+  box-shadow: 0 0 0 3px rgba(45, 106, 79, 0.12);
+}
+
+.primary-action,
+.nav-pill,
+.question-button {
+  min-height: 38px;
+  border-radius: 6px;
+  border: 1px solid #cfd7cc;
+  padding: 9px 12px;
+  text-align: center;
+  text-decoration: none;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.primary-action {
+  border-color: #244d3d;
+  background: #244d3d;
+  color: #ffffff;
+  font-weight: 700;
+}
+
+.primary-action:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.nav-pill,
+.question-button {
+  background: #ffffff;
+  color: #26372d;
+}
+
+.question-button {
+  text-align: left;
+}
+
+.nav-pill:hover,
+.question-button:hover {
+  border-color: #2d6a4f;
+  background: #f0f5ef;
+}
+
+.status-chip {
+  width: fit-content;
+  border-radius: 999px;
+  border: 1px solid #c6d2c5;
+  background: #eef4ed;
+  padding: 6px 10px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #31563f;
+}
+
+.ops-table {
+  width: 100%;
+  min-width: 760px;
+  border-collapse: collapse;
+  font-size: 0.86rem;
+}
+
+.ops-table th {
+  background: #eef2ec;
+  color: #4d5d53;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.ops-table th,
+.ops-table td {
+  border-bottom: 1px solid #dfe5dc;
+  padding: 10px 12px;
+}
+
+.diagram-node {
+  border: 1px solid #cfd7cc;
+  border-radius: 8px;
+  background: #ffffff;
+  padding: 14px;
+}
+
+.diagram-arrow {
+  align-self: center;
+  color: #587062;
+  font-family: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+  font-size: 1.4rem;
 }

@@ -1,36 +1,72 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Kloud Copilot
 
-## Getting Started
+Internal AI-assisted telemetry investigation copilot for KloudTrack monitoring data.
 
-First, run the development server:
+## What It Does
+
+- Fetches telemetry history from internal KloudTrack API endpoints.
+- Runs deterministic analysis for min, max, averages, trends, spikes, threshold crossings, missing records, duplicates, flatlines, and interval summaries.
+- Builds token-aware AI context from computed findings instead of raw minute arrays.
+- Provides an operational dashboard, architecture documentation page, and AI request context viewer.
+
+## Key Routes
+
+- `/` - telemetry investigation dashboard
+- `/architecture` - internal architecture and system design view
+- `/debug/ai-context` - structured AI payload and generated prompt viewer
+- `/api/investigations` - protected investigation API facade
+
+## Internal API Mapping
+
+The upstream API contract is documented in `monitorConstant.ts`.
+
+- Weather variables use `/telemetry/station/{stationId}/history/{variable}`.
+- Water level uses `/water-level/station/{stationId}/history/calculatedWaterLevel`.
+- Rainfall uses `/rain-gauge/station/{stationId}/history/mm`.
+
+Server-side requests use `KLOUDTRACK_API_BASE_URL` and `KLOUDTRACK_API_TOKEN`; the token is never exposed to the browser.
+
+## Environment
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+KLOUDTRACK_API_BASE_URL=https://api.kloudtechsea.com/api/v1
+KLOUDTRACK_API_TOKEN=your-kloudtrack-token
+INTERNAL_COPILOT_TOKEN=internal-access-token
+DATABASE_URL=postgres://postgres:postgres@localhost:5432/kloud_copilot
+REDIS_URL=redis://localhost:6379
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Development
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+```bash
+npm install
+npm run dev
+```
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+The app uses demo telemetry when `KLOUDTRACK_API_TOKEN` is not set.
 
-## Learn More
+## Gemini Flash
 
-To learn more about Next.js, take a look at the following resources:
+Set these values to use Gemini for copilot explanations:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-2.5-flash
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+The app still computes telemetry findings deterministically first. Gemini receives the compressed investigation context and explains those computed results; if the Gemini request fails, the API falls back to the deterministic local summary.
 
-## Deploy on Vercel
+## Verification
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```bash
+npm run lint
+npm run build
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Deployment
+
+```bash
+docker compose up --build
+```
+
+For AWS, deploy the app container to ECS/Fargate or App Runner, PostgreSQL to RDS, Redis to ElastiCache, and set `INTERNAL_COPILOT_TOKEN` behind SSO/VPN access.

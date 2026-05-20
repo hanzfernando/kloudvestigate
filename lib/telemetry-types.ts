@@ -1,0 +1,179 @@
+export type MetricKey =
+  | "temperature"
+  | "humidity"
+  | "pressure"
+  | "heatIndex"
+  | "windDirection"
+  | "windSpeed"
+  | "precipitation"
+  | "rainfall"
+  | "uvIndex"
+  | "distance"
+  | "calculatedWaterLevel"
+  | "lightIntensity";
+
+export type WarningName = "Normal" | "Advisory" | "Watch" | "Warning" | "Critical";
+
+export interface StationRaw {
+  stationName: string;
+  stationType: string;
+  location: [number, number] | { lat: number; lng: number };
+  address: string;
+  city: string;
+  state: string;
+  country: string;
+  elevation: number;
+  isActive: boolean;
+  activatedAt: string | null;
+  organizationId: number | null;
+  organization: { id: number; organizationName: string } | null;
+  id: string;
+}
+
+export interface TelemetryMetricRaw {
+  id: number;
+  recordedAt: string;
+  createdAt?: string;
+  value: number;
+}
+
+export interface TelemetryHistoryMetricRaw {
+  station: StationRaw;
+  telemetry?: TelemetryMetricRaw[];
+  waterLevel?: TelemetryMetricRaw[];
+  rainGauge?: TelemetryMetricRaw[];
+}
+
+export interface StationMetadata {
+  id: string;
+  name: string;
+  type: string;
+  location: [number, number] | null;
+  city: string;
+  organizationName: string | null;
+  isActive: boolean;
+}
+
+export interface TelemetryRecord {
+  id?: number;
+  timestamp: string;
+  value: number;
+}
+
+export interface WarningLevel {
+  name: WarningName;
+  severity: number;
+  minValue: number;
+}
+
+export interface InvestigationSelection {
+  stationId: string;
+  metric: MetricKey;
+  start: string;
+  end: string;
+  aggregationMinutes: number;
+}
+
+export interface PointMatch {
+  requestedTimestamp: string;
+  matchedTimestamp: string;
+  value: number;
+  matchType: "exact" | "nearest";
+  deltaMinutes: number;
+}
+
+export interface SpikeEvent {
+  timestamp: string;
+  previousTimestamp: string;
+  previousValue: number;
+  currentValue: number;
+  difference: number;
+}
+
+export interface ThresholdCrossing {
+  timestamp: string;
+  previousLevel: WarningName;
+  level: WarningName;
+  value: number;
+}
+
+export interface MissingPeriod {
+  start: string;
+  end: string;
+  missingCount: number;
+}
+
+export interface DuplicateTimestamp {
+  timestamp: string;
+  count: number;
+}
+
+export interface FlatlinePeriod {
+  start: string;
+  end: string;
+  value: number;
+  durationMinutes: number;
+}
+
+export interface IntervalSummary {
+  start: string;
+  end: string;
+  label: string;
+  average: number;
+  minimum: number;
+  maximum: number;
+  firstValue: number;
+  lastValue: number;
+  recordCount: number;
+  missingCount: number;
+  trend: "increasing" | "decreasing" | "stable";
+  dominantWarningLevel: WarningName;
+}
+
+export interface TelemetryAnalysis {
+  summary: {
+    average: number;
+    minimum: number;
+    maximum: number;
+    firstValue: number;
+    lastValue: number;
+    latestTimestamp: string | null;
+    recordCount: number;
+    expectedRecordCount: number;
+    missingRecordCount: number;
+    trend: "increasing" | "decreasing" | "stable";
+    stale: boolean;
+  };
+  intervals: IntervalSummary[];
+  spikes: SpikeEvent[];
+  thresholdCrossings: ThresholdCrossing[];
+  missingPeriods: MissingPeriod[];
+  duplicateTimestamps: DuplicateTimestamp[];
+  flatlinePeriods: FlatlinePeriod[];
+  highestReading: TelemetryRecord | null;
+  latestReading: TelemetryRecord | null;
+}
+
+export interface InvestigationContext {
+  station: StationMetadata;
+  metric: MetricKey;
+  timeRange: { start: string; end: string };
+  latestTimestamp: string | null;
+  summary: TelemetryAnalysis["summary"];
+  spikes: SpikeEvent[];
+  thresholdCrossings: ThresholdCrossing[];
+  missingPeriods: MissingPeriod[];
+  duplicateTimestamps: DuplicateTimestamp[];
+  flatlinePeriods: FlatlinePeriod[];
+  intervalSummaries: IntervalSummary[];
+  significantReadings: {
+    highest: TelemetryRecord | null;
+    latest: TelemetryRecord | null;
+  };
+  warningLevels: WarningLevel[];
+  tokenBudget: {
+    strategy: string;
+    estimatedTokens: number;
+    rawRecordsOmitted: number;
+  };
+}
