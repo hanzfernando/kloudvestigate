@@ -114,6 +114,7 @@ export function TelemetryInvestigationDashboard() {
             </h1>
           </div>
           <nav className="flex flex-wrap gap-2 text-sm">
+            <Link className="nav-pill" href="/pubmat">Pubmat table</Link>
             <Link className="nav-pill" href="/architecture">Architecture</Link>
             <Link className="nav-pill" href="/debug/ai-context">AI context viewer</Link>
             <button className="primary-action" onClick={() => runInvestigation()} disabled={loading}>

@@ -10,8 +10,6 @@ export const allMetricKeys: MetricKey[] = [
   "precipitation",
   "rainfall",
   "uvIndex",
-  "distance",
-  "calculatedWaterLevel",
   "lightIntensity",
 ];
 
@@ -87,22 +85,6 @@ export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = 
     acceptableRange: { minimum: 0, maximum: 15 },
     spikeDelta: 2,
     flatlineMinutes: 60,
-  },
-  distance: {
-    metric: "distance",
-    label: "Sensor distance",
-    unit: "cm",
-    acceptableRange: { minimum: 0, maximum: 1000 },
-    spikeDelta: 50,
-    flatlineMinutes: 30,
-  },
-  calculatedWaterLevel: {
-    metric: "calculatedWaterLevel",
-    label: "Water level",
-    unit: "cm",
-    acceptableRange: { minimum: 0, maximum: 1000 },
-    spikeDelta: 25,
-    flatlineMinutes: 30,
   },
   lightIntensity: {
     metric: "lightIntensity",

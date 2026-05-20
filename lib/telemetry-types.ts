@@ -8,8 +8,6 @@ export type MetricKey =
   | "precipitation"
   | "rainfall"
   | "uvIndex"
-  | "distance"
-  | "calculatedWaterLevel"
   | "lightIntensity";
 
 export type InvestigationMetricKey = MetricKey | "all";

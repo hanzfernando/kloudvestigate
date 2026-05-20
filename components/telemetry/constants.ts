@@ -1,16 +1,12 @@
 import type { MetricOption } from "./types";
+import { allMetricKeys, getMetricAnalysisProfile } from "@/lib/metric-profiles";
 
 export const metrics: MetricOption[] = [
   { label: "All", value: "all" },
-  { label: "Temperature", value: "temperature" },
-  { label: "Humidity", value: "humidity" },
-  { label: "Heat Index", value: "heatIndex" },
-  { label: "Pressure", value: "pressure" },
-  { label: "Wind speed", value: "windSpeed" },
-  { label: "Light", value: "lightIntensity" },
-  { label: "UV Index", value: "uvIndex"},
-  { label: "Rainfall", value: "rainfall" },
-
+  ...allMetricKeys.map((metric) => ({
+    label: getMetricAnalysisProfile(metric).label,
+    value: metric,
+  })),
 ];
 
 export const questions = [
