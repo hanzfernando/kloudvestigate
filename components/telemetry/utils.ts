@@ -12,6 +12,13 @@ export function toInputValue(date: Date) {
   return new Date(date.getTime() + philippineOffsetMs).toISOString().slice(0, 16);
 }
 
+export function phtDayBoundaryToUtcISOString(dayOffset: number) {
+  const phtNow = new Date(Date.now() + philippineOffsetMs);
+  phtNow.setUTCHours(0, 0, 0, 0);
+  phtNow.setUTCDate(phtNow.getUTCDate() + dayOffset);
+  return new Date(phtNow.getTime() - philippineOffsetMs).toISOString();
+}
+
 export function philippineInputToUtcISOString(value: string) {
   const inputWithSeconds = value.length === 16 ? `${value}:00` : value;
   return new Date(`${inputWithSeconds}+08:00`).toISOString();

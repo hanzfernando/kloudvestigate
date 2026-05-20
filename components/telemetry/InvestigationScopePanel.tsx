@@ -1,3 +1,5 @@
+"use client";
+
 import Link from "next/link";
 import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
 import type { MetricOption } from "./types";
@@ -22,6 +24,9 @@ export function InvestigationScopePanel({
   onStartChange,
   onEndChange,
   onAggregationChange,
+  onQuickInvestigateEveryStation,
+  quickActionBusy,
+  quickActionProgress,
 }: {
   stations: StationMetadata[];
   stationId: string;
@@ -35,6 +40,9 @@ export function InvestigationScopePanel({
   onStartChange: (value: string) => void;
   onEndChange: (value: string) => void;
   onAggregationChange: (value: number) => void;
+  onQuickInvestigateEveryStation?: () => void;
+  quickActionBusy?: boolean;
+  quickActionProgress?: string;
 }) {
   return (
     <aside className="panel h-fit">
@@ -85,6 +93,22 @@ export function InvestigationScopePanel({
           ))}
         </div>
       </div>
+      {onQuickInvestigateEveryStation ? (
+        <div className="mt-4 border-t border-[#dbe1d8] pt-4">
+          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Station batch</p>
+          <button
+            className="primary-action mt-3 w-full"
+            type="button"
+            onClick={onQuickInvestigateEveryStation}
+            disabled={quickActionBusy}
+          >
+            {quickActionBusy ? `Investigating every station${quickActionProgress ? ` (${quickActionProgress})` : ""}` : "Investigate every station"}
+          </button>
+          <p className="mt-2 text-xs leading-5 text-[#69766d]">
+            Yesterday, full day, all metrics, 1-minute aggregation, throttled to 3 requests per second.
+          </p>
+        </div>
+      ) : null}
     </aside>
   );
 }

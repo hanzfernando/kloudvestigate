@@ -12,7 +12,11 @@ import { SummaryStats } from "./telemetry/SummaryStats";
 import { TelemetryTimeline } from "./telemetry/TelemetryTimeline";
 import { metrics, questions } from "./telemetry/constants";
 import type { InvestigationResponse, StationsResponse } from "./telemetry/types";
-import { philippineInputToUtcISOString, toInputValue } from "./telemetry/utils";
+import { phtDayBoundaryToUtcISOString, philippineInputToUtcISOString, toInputValue } from "./telemetry/utils";
+import { useInvestigationQuickActionStore } from "./telemetry/useInvestigationQuickActionStore";
+
+const QUICK_ACTION_REQUEST_GAP_MS = 350;
+const QUICK_ACTION_REQUEST_TIMEOUT_MS = 45_000;
 
 export function TelemetryInvestigationDashboard() {
   const [stationId, setStationId] = useState("station-001");
@@ -38,10 +42,25 @@ export function TelemetryInvestigationDashboard() {
   });
   const [question, setQuestion] = useState(questions[0]);
   const [data, setData] = useState<InvestigationResponse | null>(null);
+  const [manualDataStationId, setManualDataStationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const quickActionStatus = useInvestigationQuickActionStore((state) => state.status);
+  const quickActionCompletedStations = useInvestigationQuickActionStore((state) => state.completedStations);
+  const quickActionTotalStations = useInvestigationQuickActionStore((state) => state.totalStations);
+  const quickActionResultsByStationId = useInvestigationQuickActionStore((state) => state.resultsByStationId);
+  const quickActionError = useInvestigationQuickActionStore((state) => state.error);
+  const beginQuickAction = useInvestigationQuickActionStore((state) => state.start);
+  const setQuickActionStation = useInvestigationQuickActionStore((state) => state.setActiveStation);
+  const setQuickActionResult = useInvestigationQuickActionStore((state) => state.setStationResult);
+  const completeQuickAction = useInvestigationQuickActionStore((state) => state.complete);
+  const resetQuickAction = useInvestigationQuickActionStore((state) => state.reset);
+
+  const quickActionRunning = quickActionStatus === "running";
+  const quickActionData = quickActionStatus !== "idle" ? quickActionResultsByStationId[stationId] ?? null : null;
+  const displayedData = quickActionData ?? (manualDataStationId === stationId ? data : null);
   const sourceLabel =
-    data?.source === "kloudtrack" || stationSource === "kloudtrack"
+    displayedData?.source === "kloudtrack" || stationSource === "kloudtrack"
       ? "KloudTrack API"
       : "Demo fallback";
 
@@ -73,8 +92,13 @@ export function TelemetryInvestigationDashboard() {
     nextQuestion?: string;
     selectedStationId?: string;
   } = {}) {
+    if (quickActionRunning) return;
+
+    resetQuickAction();
     setLoading(true);
     setError(null);
+    setData(null);
+    setManualDataStationId(selectedStationId);
 
     try {
       const response = await fetch("/api/investigations", {
@@ -101,10 +125,79 @@ export function TelemetryInvestigationDashboard() {
     }
   }
 
+  async function runInvestigateEveryStation() {
+    if (quickActionRunning || loading || !stations.length) return;
+
+    const populatedResults = quickActionResultsByStationId;
+    const hasPopulatedResults = Object.keys(populatedResults).length > 0;
+    const skipPopulatedStations = hasPopulatedResults
+      ? window.confirm("There is already populated investigation data. Skip stations that already have data?")
+      : false;
+    const initialResults = skipPopulatedStations ? populatedResults : {};
+
+    setError(null);
+    if (!skipPopulatedStations) resetQuickAction();
+    setManualDataStationId(null);
+    setData(null);
+    beginQuickAction(stations.length, initialResults);
+
+    const { start, end } = buildYesterdayFullDayRange();
+
+    for (const [index, station] of stations.entries()) {
+      setQuickActionStation(station.id, index);
+      setStationId(station.id);
+
+      const existingResult = initialResults[station.id];
+      if (existingResult) {
+        setData(existingResult);
+        setQuickActionStation(station.id, index + 1);
+        continue;
+      }
+
+      try {
+        const response = await fetchWithTimeout(
+          "/api/investigations",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              stationId: station.id,
+              metric: "all",
+              aggregationMinutes: 1,
+              start,
+              end,
+              question: "Summarize every metric for yesterday's full day.",
+              askCopilot: false,
+              useDemoData: false,
+            }),
+          },
+          QUICK_ACTION_REQUEST_TIMEOUT_MS,
+        );
+
+        if (!response.ok) {
+          throw new Error(`Investigation request failed (${response.status})`);
+        }
+
+        const payload = (await response.json()) as InvestigationResponse;
+        setQuickActionResult(station.id, payload);
+        setQuickActionStation(station.id, index + 1);
+        setData(payload);
+      } catch {
+        setQuickActionStation(station.id, index + 1);
+      }
+
+      if (index < stations.length - 1) {
+        await wait(QUICK_ACTION_REQUEST_GAP_MS);
+      }
+    }
+
+    completeQuickAction();
+  }
+
   return (
     <div className="min-h-screen bg-[#f4f6f3] text-[#18211d]">
       <header className="border-b border-[#d8ded5] bg-[#fbfcfa]">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mx-auto flex max-w-375 flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">
               Internal telemetry intelligence
@@ -117,14 +210,14 @@ export function TelemetryInvestigationDashboard() {
             <Link className="nav-pill" href="/pubmat">Pubmat table</Link>
             <Link className="nav-pill" href="/architecture">Architecture</Link>
             <Link className="nav-pill" href="/debug/ai-context">AI context viewer</Link>
-            <button className="primary-action" onClick={() => runInvestigation()} disabled={loading}>
+            <button className="primary-action" onClick={() => void runInvestigation()} disabled={loading || quickActionRunning}>
               {loading ? "Analyzing" : "Run investigation"}
             </button>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1500px] gap-4 px-5 py-5 xl:grid-cols-[320px_minmax(0,1fr)_420px]">
+      <main className="mx-auto grid max-w-375 gap-4 px-5 py-5 xl:grid-cols-[320px_minmax(0,1fr)_420px]">
         <InvestigationScopePanel
           stations={stations}
           stationId={stationId}
@@ -138,29 +231,33 @@ export function TelemetryInvestigationDashboard() {
           onStartChange={setStart}
           onEndChange={setEnd}
           onAggregationChange={setAggregationMinutes}
+          onQuickInvestigateEveryStation={() => void runInvestigateEveryStation()}
+          quickActionBusy={quickActionRunning}
+          quickActionProgress={`${quickActionCompletedStations}/${quickActionTotalStations}`}
         />
 
         <section className="grid gap-4">
           {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
-          <SummaryStats analysis={data?.analysis} />
-          <OutlierOverview analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
+          {quickActionError ? <div className="panel border-[#c76f59] text-[#843722]">{quickActionError}</div> : null}
+          <SummaryStats analysis={displayedData?.analysis} />
+          <OutlierOverview analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
           <TelemetryTimeline
-            analysis={data?.analysis}
-            metricAnalyses={data?.metricAnalyses}
+            analysis={displayedData?.analysis}
+            metricAnalyses={displayedData?.metricAnalyses}
             sourceLabel={sourceLabel}
           />
-          <EventsPanel analysis={data?.analysis} metricAnalyses={data?.metricAnalyses} />
+          <EventsPanel analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
           <FetchedValuesTable
-            analysis={data?.analysis}
-            records={data?.records ?? []}
-            metricAnalyses={data?.metricAnalyses}
+            analysis={displayedData?.analysis}
+            records={displayedData?.records ?? []}
+            metricAnalyses={displayedData?.metricAnalyses}
           />
         </section>
 
         <CopilotPanel
           question={question}
           metric={metric}
-          data={data}
+          data={displayedData}
           loading={loading}
           onQuestionChange={setQuestion}
           onRun={() => void runInvestigation({ askCopilot: true })}
@@ -168,4 +265,35 @@ export function TelemetryInvestigationDashboard() {
       </main>
     </div>
   );
+}
+
+function buildYesterdayFullDayRange() {
+  return {
+    start: phtDayBoundaryToUtcISOString(-1),
+    end: phtDayBoundaryToUtcISOString(0),
+  };
+}
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit,
+  timeoutMs: number,
+) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(input, {
+      ...init,
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeoutId);
+  }
+}
+
+function wait(ms: number) {
+  return new Promise<void>((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
