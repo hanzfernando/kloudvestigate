@@ -210,9 +210,6 @@ export function TelemetryInvestigationDashboard() {
             <Link className="nav-pill" href="/pubmat">Pubmat table</Link>
             <Link className="nav-pill" href="/architecture">Architecture</Link>
             <Link className="nav-pill" href="/debug/ai-context">AI context viewer</Link>
-            <button className="primary-action" onClick={() => void runInvestigation()} disabled={loading || quickActionRunning}>
-              {loading ? "Analyzing" : "Run investigation"}
-            </button>
           </nav>
         </div>
       </header>
@@ -231,6 +228,9 @@ export function TelemetryInvestigationDashboard() {
           onStartChange={setStart}
           onEndChange={setEnd}
           onAggregationChange={setAggregationMinutes}
+          onRunInvestigation={() => void runInvestigation()}
+          runInvestigationBusy={loading}
+          runInvestigationDisabled={quickActionRunning}
           onQuickInvestigateEveryStation={() => void runInvestigateEveryStation()}
           quickActionBusy={quickActionRunning}
           quickActionProgress={`${quickActionCompletedStations}/${quickActionTotalStations}`}

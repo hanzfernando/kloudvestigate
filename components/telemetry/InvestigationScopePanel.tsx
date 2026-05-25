@@ -24,6 +24,9 @@ export function InvestigationScopePanel({
   onStartChange,
   onEndChange,
   onAggregationChange,
+  onRunInvestigation,
+  runInvestigationBusy,
+  runInvestigationDisabled,
   onQuickInvestigateEveryStation,
   quickActionBusy,
   quickActionProgress,
@@ -41,6 +44,9 @@ export function InvestigationScopePanel({
   onStartChange: (value: string) => void;
   onEndChange: (value: string) => void;
   onAggregationChange: (value: number) => void;
+  onRunInvestigation: () => void;
+  runInvestigationBusy?: boolean;
+  runInvestigationDisabled?: boolean;
   onQuickInvestigateEveryStation?: () => void;
   quickActionBusy?: boolean;
   quickActionProgress?: string;
@@ -87,6 +93,14 @@ export function InvestigationScopePanel({
           <option value={1440}>Daily</option>
         </select>
       </label>
+      <button
+        className="primary-action mt-4 w-full"
+        type="button"
+        onClick={onRunInvestigation}
+        disabled={runInvestigationBusy || runInvestigationDisabled}
+      >
+        {runInvestigationBusy ? "Analyzing" : "Run investigation"}
+      </button>
       <div className="mt-4 border-t border-[#dbe1d8] pt-4">
         <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Quick commands</p>
         <div className="mt-3 grid gap-2">

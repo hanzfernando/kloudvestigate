@@ -82,8 +82,8 @@ export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = 
     metric: "uvIndex",
     label: "UV index",
     unit: "index",
-    acceptableRange: { minimum: 0, maximum: 15 },
-    spikeDelta: 2,
+    acceptableRange: { minimum: 0, maximum: 11 },
+    spikeDelta: 10,
     flatlineMinutes: 60,
   },
   lightIntensity: {
