@@ -49,6 +49,15 @@ export interface InvestigationResponse {
   records: TelemetryRecord[];
   metricAnalyses?: MetricInvestigationAnalysis[];
   source: SourceKind;
+  cache?: {
+    hit: boolean;
+    savedAt?: string;
+  };
+}
+
+export interface InvestigationBatchCacheResponse {
+  selection: Omit<InvestigationSelection, "stationId">;
+  resultsByStationId: Record<string, InvestigationResponse>;
 }
 
 export type PubmatQuickFetchStatus = "ready" | "attention" | "missing" | "failed";

@@ -2,6 +2,12 @@ import { buildAiPrompt, buildInvestigationContext, explainFindings } from "@/lib
 import { assertInternalAccess, writeAuditEvent } from "@/lib/auth";
 import { generateGeminiAnswer } from "@/lib/gemini";
 import {
+  canUseServerInvestigationCache,
+  readServerBatchInvestigationCache,
+  readServerInvestigationCache,
+  writeServerInvestigationCache,
+} from "@/lib/server-investigation-cache";
+import {
   getAllTelemetryHistoryFromKloudtrackApi,
   getTelemetryMetricHistoryFromKloudtrackApi,
   normalizeAllTelemetry,
@@ -35,6 +41,56 @@ const validMetrics: InvestigationMetricKey[] = [
   "lightIntensity",
 ];
 
+export async function GET(request: Request) {
+  const denied = assertInternalAccess(request);
+  if (denied) return denied;
+
+  try {
+    const url = new URL(request.url);
+    const stationIds = (url.searchParams.get("stationIds") ?? "")
+      .split(",")
+      .map((stationId) => stationId.trim())
+      .filter(Boolean);
+    const requestedMetric = url.searchParams.get("metric");
+    const aggregationMinutes = Number(url.searchParams.get("aggregationMinutes") ?? 60);
+    const selection = parseSelection({
+      stationId: stationIds[0] ?? "station-001",
+      metric: requestedMetric ? requestedMetric as InvestigationMetricKey : "all",
+      start: url.searchParams.get("start") ?? undefined,
+      end: url.searchParams.get("end") ?? undefined,
+      aggregationMinutes: Number.isFinite(aggregationMinutes) ? aggregationMinutes : 60,
+    });
+
+    const resultsByStationId = await readServerBatchInvestigationCache({
+      stationIds,
+      selection: {
+        metric: selection.metric,
+        start: selection.start,
+        end: selection.end,
+        aggregationMinutes: selection.aggregationMinutes,
+      },
+    });
+
+    return Response.json({
+      selection: {
+        metric: selection.metric,
+        start: selection.start,
+        end: selection.end,
+        aggregationMinutes: selection.aggregationMinutes,
+      },
+      resultsByStationId,
+    });
+  } catch (error) {
+    return Response.json(
+      {
+        error: "Investigation cache lookup failed",
+        message: error instanceof Error ? error.message : "Unknown cache lookup error",
+      },
+      { status: 400 },
+    );
+  }
+}
+
 export async function POST(request: Request) {
   const denied = assertInternalAccess(request);
   if (denied) return denied;
@@ -50,6 +106,26 @@ export async function POST(request: Request) {
     const requestedDemoData = body.useDemoData ?? false;
     const askCopilot = body.askCopilot ?? false;
     const selection = parseSelection(body);
+    const canUseCache = canUseServerInvestigationCache({
+      askCopilot,
+      pointTimestamp: body.pointTimestamp,
+    });
+    const cached = canUseCache
+      ? await readServerInvestigationCache(selection)
+      : null;
+
+    if (cached) {
+      writeAuditEvent({
+        action: "investigation.cache_hit",
+        stationId: selection.stationId,
+        metric: selection.metric,
+        start: selection.start,
+        end: selection.end,
+      });
+
+      return Response.json(cached);
+    }
+
     const source = await loadTelemetry(selection, requestedDemoData);
     const aggregatedSource = {
       station: source.station,
@@ -67,7 +143,9 @@ export async function POST(request: Request) {
       primary.metric,
       selection,
       primary.analysis,
-      defaultWarningLevels,
+      primary.analysis.metricProfile.thresholdDetection === false
+        ? defaultWarningLevels
+        : primary.analysis.metricProfile.warningLevels ?? defaultWarningLevels,
       primary.records.length,
     );
     const question = body.question || "Summarize the selected telemetry range.";
@@ -80,18 +158,7 @@ export async function POST(request: Request) {
       ? await generateAnswer(prompt, deterministicAnswer)
       : null;
 
-    writeAuditEvent({
-      action: "investigation.run",
-      askCopilot,
-      stationId: selection.stationId,
-      metric: selection.metric,
-      start: selection.start,
-      end: selection.end,
-      promptTokensEstimated: context.tokenBudget.estimatedTokens,
-      aiProvider: aiResult?.provider ?? null,
-    });
-
-    return Response.json({
+    const payload = {
       selection,
       station: source.station,
       analysis: primary.analysis,
@@ -106,7 +173,24 @@ export async function POST(request: Request) {
       records: primary.records,
       metricAnalyses,
       source: requestedDemoData || !process.env.KLOUDTRACK_API_TOKEN ? "demo" : "kloudtrack",
+    };
+
+    if (canUseCache) {
+      await writeServerInvestigationCache(selection, payload);
+    }
+
+    writeAuditEvent({
+      action: "investigation.run",
+      askCopilot,
+      stationId: selection.stationId,
+      metric: selection.metric,
+      start: selection.start,
+      end: selection.end,
+      promptTokensEstimated: context.tokenBudget.estimatedTokens,
+      aiProvider: aiResult?.provider ?? null,
     });
+
+    return Response.json(payload);
   } catch (error) {
     return Response.json(
       {

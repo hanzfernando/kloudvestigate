@@ -117,6 +117,9 @@ export interface MetricAnalysisProfile {
     maximum: number;
   };
   spikeDelta: number;
+  spikeDetection?: boolean;
+  thresholdDetection?: boolean;
+  warningLevels?: WarningLevel[];
   flatlineMinutes: number;
 }
 

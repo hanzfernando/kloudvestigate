@@ -20,6 +20,10 @@ interface QuickInvestigationState {
   ) => string;
   setActiveStation: (stationId: string, completedStations: number) => void;
   setStationResult: (stationId: string, response: InvestigationResponse) => void;
+  hydrateSavedResults: (
+    totalStations: number,
+    resultsByStationId: Record<string, InvestigationResponse>,
+  ) => void;
   setError: (error: string | null) => void;
   complete: () => void;
   reset: () => void;
@@ -59,6 +63,15 @@ export const useInvestigationQuickActionStore = create<QuickInvestigationState>(
       [stationId]: response,
     },
   })),
+  hydrateSavedResults: (totalStations, resultsByStationId) => set({
+    status: "completed",
+    sessionId: null,
+    activeStationId: null,
+    completedStations: Object.keys(resultsByStationId).length,
+    totalStations,
+    resultsByStationId,
+    error: null,
+  }),
   setError: (error) => set({ error }),
   complete: () => set((state) => ({
     status: state.error ? "failed" : "completed",

@@ -29,10 +29,6 @@ export interface AnalyzeTelemetryOptions {
 
 export const defaultWarningLevels: WarningLevel[] = [
   { name: "Normal", severity: 0, minValue: Number.NEGATIVE_INFINITY },
-  { name: "Advisory", severity: 1, minValue: 3 },
-  { name: "Watch", severity: 2, minValue: 4 },
-  { name: "Warning", severity: 3, minValue: 5 },
-  { name: "Critical", severity: 4, minValue: 6 },
 ];
 
 export function analyzeTelemetry(
@@ -42,6 +38,9 @@ export function analyzeTelemetry(
 ): TelemetryAnalysis {
   const expectedIntervalMinutes = options.expectedIntervalMinutes ?? 1;
   const metricProfile = options.metricProfile ?? getMetricAnalysisProfile("rainfall");
+  const effectiveWarningLevels = metricProfile.thresholdDetection === false
+    ? defaultWarningLevels
+    : metricProfile.warningLevels ?? warningLevels;
   const spikeDelta = metricProfile.spikeDelta;
   const flatlineMinutes = options.flatlineMinutes ?? metricProfile.flatlineMinutes;
   const staleAfterMinutes = options.staleAfterMinutes ?? 15;
@@ -64,13 +63,15 @@ export function analyzeTelemetry(
     options.end,
     expectedIntervalMinutes,
   );
-  const spikes = findSpikes(unique, spikeDelta);
+  const spikes = metricProfile.spikeDetection === false ? [] : findSpikes(unique, spikeDelta);
   const rangeViolations = findRangeViolations(unique, metricProfile);
-  const thresholdCrossings = findThresholdCrossings(unique, warningLevels);
+  const thresholdCrossings = metricProfile.thresholdDetection === false
+    ? []
+    : findThresholdCrossings(unique, effectiveWarningLevels);
   const flatlinePeriods = findFlatlines(unique, flatlineMinutes);
   const intervals = buildIntervalSummaries(
     unique,
-    warningLevels,
+    effectiveWarningLevels,
     options.start,
     options.end,
     options.aggregationMinutes,

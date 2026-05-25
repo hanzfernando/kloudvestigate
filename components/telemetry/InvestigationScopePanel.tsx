@@ -55,7 +55,7 @@ export function InvestigationScopePanel({
   const hasQuickActionResults = quickActionBusy || Object.keys(quickActionResultsByStationId).length > 0;
 
   return (
-    <aside className="panel h-fit">
+    <aside className="panel h-fit lg:sticky lg:top-5">
       <h2 className="panel-title">Investigation Scope</h2>
       <label className="field-label">
         Station
@@ -101,68 +101,134 @@ export function InvestigationScopePanel({
       >
         {runInvestigationBusy ? "Analyzing" : "Run investigation"}
       </button>
-      <div className="mt-4 border-t border-[#dbe1d8] pt-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Quick commands</p>
-        <div className="mt-3 grid gap-2">
-          {quickCommands.map((item) => (
-            <Link className="question-button" href={item.href} key={item.href}>
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </div>
+      <QuickCommandsSection />
       {onQuickInvestigateEveryStation ? (
-        <div className="mt-4 border-t border-[#dbe1d8] pt-4">
-          <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Station batch</p>
-          <button
-            className="primary-action mt-3 w-full"
-            type="button"
-            onClick={onQuickInvestigateEveryStation}
-            disabled={quickActionBusy}
-          >
-            {quickActionBusy ? `Investigating every station${quickActionProgress ? ` (${quickActionProgress})` : ""}` : "Investigate every station"}
-          </button>
-          <p className="mt-2 text-xs leading-5 text-[#69766d]">
-            Yesterday, full day, all metrics, 1-minute aggregation, throttled to 3 requests per second.
-          </p>
-          {hasQuickActionResults ? (
-            <div className="mt-4 border-t border-[#dbe1d8] pt-4">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Station summary</p>
-                {quickActionProgress ? <span className="text-xs text-[#69766d]">{quickActionProgress}</span> : null}
-              </div>
-              <div className="mt-3 max-h-[420px] overflow-auto rounded-[6px] border border-[#dbe1d8] bg-white">
-                {stations.map((station) => {
-                  const result = quickActionResultsByStationId[station.id];
-                  const counts = getStationIssueCounts(result);
-                  const isSelected = station.id === stationId;
-
-                  return (
-                    <button
-                      className={`grid w-full gap-2 border-b border-[#edf0ea] p-3 text-left last:border-b-0 hover:bg-[#f7f9f6] ${isSelected ? "bg-[#eef5ef]" : ""}`}
-                      key={station.id}
-                      type="button"
-                      onClick={() => onStationChange(station.id)}
-                    >
-                      <span className="min-w-0 truncate text-sm font-semibold text-[#26372d]">{station.name}</span>
-                      {result ? (
-                        <span className="grid grid-cols-3 gap-2 text-xs text-[#4d5d53]">
-                          <IssueCount label="Missing" value={counts.missing} tone={counts.missing ? "caution" : "neutral"} />
-                          <IssueCount label="Range" value={counts.outOfRange} tone={counts.outOfRange ? "danger" : "neutral"} />
-                          <IssueCount label="Warnings" value={counts.warnings} tone={counts.warnings ? "danger" : "neutral"} />
-                        </span>
-                      ) : (
-                        <span className="text-xs text-[#69766d]">{quickActionBusy ? "Pending" : "No quick-action data"}</span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          ) : null}
-        </div>
+        <StationBatchSection
+          stations={stations}
+          stationId={stationId}
+          onStationChange={onStationChange}
+          onQuickInvestigateEveryStation={onQuickInvestigateEveryStation}
+          quickActionBusy={quickActionBusy}
+          quickActionProgress={quickActionProgress}
+          quickActionResultsByStationId={quickActionResultsByStationId}
+          hasQuickActionResults={hasQuickActionResults}
+        />
       ) : null}
     </aside>
+  );
+}
+
+function QuickCommandsSection() {
+  return (
+    <div className="mt-4 border-t border-[#dbe1d8] pt-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Quick commands</p>
+      <div className="mt-3 grid gap-2">
+        {quickCommands.map((item) => (
+          <Link className="question-button" href={item.href} key={item.href}>
+            {item.label}
+          </Link>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function StationBatchSection({
+  stations,
+  stationId,
+  onStationChange,
+  onQuickInvestigateEveryStation,
+  quickActionBusy,
+  quickActionProgress,
+  quickActionResultsByStationId,
+  hasQuickActionResults,
+}: {
+  stations: StationMetadata[];
+  stationId: string;
+  onStationChange: (value: string) => void;
+  onQuickInvestigateEveryStation: () => void;
+  quickActionBusy?: boolean;
+  quickActionProgress?: string;
+  quickActionResultsByStationId: Record<string, InvestigationResponse>;
+  hasQuickActionResults: boolean;
+}) {
+  return (
+    <div className="mt-4 border-t border-[#dbe1d8] pt-4">
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Station batch</p>
+      <button
+        className="primary-action mt-3 w-full"
+        type="button"
+        onClick={onQuickInvestigateEveryStation}
+        disabled={quickActionBusy}
+      >
+        {quickActionBusy ? `Investigating every station${quickActionProgress ? ` (${quickActionProgress})` : ""}` : "Investigate every station"}
+      </button>
+      <p className="mt-2 text-xs leading-5 text-[#69766d]">
+        Yesterday, full day, all metrics, 1-minute aggregation, throttled to 3 requests per second.
+      </p>
+      {hasQuickActionResults ? (
+        <StationBatchSummary
+          stations={stations}
+          stationId={stationId}
+          onStationChange={onStationChange}
+          quickActionBusy={quickActionBusy}
+          quickActionProgress={quickActionProgress}
+          quickActionResultsByStationId={quickActionResultsByStationId}
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function StationBatchSummary({
+  stations,
+  stationId,
+  onStationChange,
+  quickActionBusy,
+  quickActionProgress,
+  quickActionResultsByStationId,
+}: {
+  stations: StationMetadata[];
+  stationId: string;
+  onStationChange: (value: string) => void;
+  quickActionBusy?: boolean;
+  quickActionProgress?: string;
+  quickActionResultsByStationId: Record<string, InvestigationResponse>;
+}) {
+  return (
+    <div className="mt-4 border-t border-[#dbe1d8] pt-4">
+      <div className="flex items-center justify-between gap-3">
+        <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Station summary</p>
+        {quickActionProgress ? <span className="text-xs text-[#69766d]">{quickActionProgress}</span> : null}
+      </div>
+      <div className="mt-3 max-h-[420px] overflow-auto rounded-[6px] border border-[#dbe1d8] bg-white">
+        {stations.map((station) => {
+          const result = quickActionResultsByStationId[station.id];
+          const counts = getStationIssueCounts(result);
+          const isSelected = station.id === stationId;
+
+          return (
+            <button
+              className={`grid w-full gap-2 border-b border-[#edf0ea] p-3 text-left last:border-b-0 hover:bg-[#f7f9f6] ${isSelected ? "bg-[#eef5ef]" : ""}`}
+              key={station.id}
+              type="button"
+              onClick={() => onStationChange(station.id)}
+            >
+              <span className="min-w-0 truncate text-sm font-semibold text-[#26372d]">{station.name}</span>
+              {result ? (
+                <span className="grid grid-cols-3 gap-2 text-xs text-[#4d5d53]">
+                  <IssueCount label="Missing" value={counts.missing} tone={counts.missing ? "caution" : "neutral"} />
+                  <IssueCount label="Range" value={counts.outOfRange} tone={counts.outOfRange ? "danger" : "neutral"} />
+                  {/* <IssueCount label="Warnings" value={counts.warnings} tone={counts.warnings ? "danger" : "neutral"} /> */}
+                </span>
+              ) : (
+                <span className="text-xs text-[#69766d]">{quickActionBusy ? "Pending" : "No quick-action data"}</span>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }
 
@@ -172,16 +238,16 @@ function getStationIssueCounts(result?: InvestigationResponse) {
       (counts, item) => ({
         missing: counts.missing + item.analysis.summary.missingRecordCount,
         outOfRange: counts.outOfRange + item.analysis.rangeViolations.length,
-        warnings: counts.warnings + item.analysis.thresholdCrossings.length,
+        // warnings: counts.warnings + item.analysis.thresholdCrossings.length,
       }),
-      { missing: 0, outOfRange: 0, warnings: 0 },
+      { missing: 0, outOfRange: 0 },
     );
   }
 
   return {
     missing: result?.analysis.summary.missingRecordCount ?? 0,
     outOfRange: result?.analysis.rangeViolations.length ?? 0,
-    warnings: result?.analysis.thresholdCrossings.length ?? 0,
+    // warnings: result?.analysis.thresholdCrossings.length ?? 0,
   };
 }
 

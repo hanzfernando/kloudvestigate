@@ -11,12 +11,12 @@ export function SummaryStats({
   const issueCounts = getIssueCounts(analysis, metricAnalyses);
 
   return (
-    <div className="grid gap-3 md:grid-cols-5">
+    <div className="grid gap-3 md:grid-cols-4">
       <Stat label="Average" value={analysis?.summary.average ?? 0} />
       <Stat label="Maximum" value={analysis?.summary.maximum ?? 0} emphasis={analysis?.rangeViolations.length ? "warn" : undefined} />
       <Stat label="Missing" value={issueCounts.missing} emphasis={issueCounts.missing ? "caution" : undefined} />
       <Stat label="Out of range" value={issueCounts.outOfRange} emphasis={issueCounts.outOfRange ? "danger" : undefined} />
-      <Stat label="Warnings" value={issueCounts.warnings} emphasis={issueCounts.warnings ? "danger" : undefined} />
+      {/* <Stat label="Warnings" value={issueCounts.warnings} emphasis={issueCounts.warnings ? "danger" : undefined} /> */}
     </div>
   );
 }

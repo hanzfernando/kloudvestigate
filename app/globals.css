@@ -72,7 +72,8 @@ textarea {
 
 .primary-action,
 .nav-pill,
-.question-button {
+.question-button,
+.icon-button {
   min-height: 38px;
   border-radius: 6px;
   border: 1px solid #cfd7cc;
@@ -104,10 +105,43 @@ textarea {
   text-align: left;
 }
 
+.icon-button {
+  display: inline-flex;
+  min-height: 36px;
+  min-width: 36px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  background: #ffffff;
+  color: #26372d;
+}
+
 .nav-pill:hover,
-.question-button:hover {
+.question-button:hover,
+.icon-button:hover {
   border-color: #2d6a4f;
   background: #f0f5ef;
+}
+
+.chat-launcher {
+  position: relative;
+  display: inline-flex;
+  min-height: 48px;
+  min-width: 48px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  border: 1px solid #244d3d;
+  background: #244d3d;
+  color: #ffffff;
+  box-shadow: 0 14px 30px rgba(24, 33, 29, 0.2);
+  transition: transform 120ms ease, background 120ms ease, box-shadow 120ms ease;
+}
+
+.chat-launcher:hover {
+  background: #2d6a4f;
+  box-shadow: 0 16px 34px rgba(24, 33, 29, 0.24);
+  transform: translateY(-1px);
 }
 
 .status-chip {

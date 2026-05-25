@@ -11,7 +11,7 @@ import { OutlierOverview } from "./telemetry/OutlierOverview";
 import { SummaryStats } from "./telemetry/SummaryStats";
 import { TelemetryTimeline } from "./telemetry/TelemetryTimeline";
 import { metrics, questions } from "./telemetry/constants";
-import type { InvestigationResponse, StationsResponse } from "./telemetry/types";
+import type { InvestigationBatchCacheResponse, InvestigationResponse, StationsResponse } from "./telemetry/types";
 import { phtDayBoundaryToUtcISOString, philippineInputToUtcISOString, toInputValue } from "./telemetry/utils";
 import { useInvestigationQuickActionStore } from "./telemetry/useInvestigationQuickActionStore";
 
@@ -53,6 +53,7 @@ export function TelemetryInvestigationDashboard() {
   const beginQuickAction = useInvestigationQuickActionStore((state) => state.start);
   const setQuickActionStation = useInvestigationQuickActionStore((state) => state.setActiveStation);
   const setQuickActionResult = useInvestigationQuickActionStore((state) => state.setStationResult);
+  const hydrateSavedQuickActionResults = useInvestigationQuickActionStore((state) => state.hydrateSavedResults);
   const completeQuickAction = useInvestigationQuickActionStore((state) => state.complete);
   const resetQuickAction = useInvestigationQuickActionStore((state) => state.reset);
 
@@ -64,6 +65,31 @@ export function TelemetryInvestigationDashboard() {
       ? "KloudTrack API"
       : "Demo fallback";
 
+  async function loadSavedBatchInvestigations(nextStations: StationMetadata[]) {
+    if (!nextStations.length) return;
+
+    const { start, end } = buildYesterdayFullDayRange();
+    const params = new URLSearchParams({
+      stationIds: nextStations.map((station) => station.id).join(","),
+      metric: "all",
+      aggregationMinutes: "1",
+      start,
+      end,
+    });
+
+    try {
+      const response = await fetch(`/api/investigations?${params.toString()}`, { cache: "no-store" });
+      if (!response.ok) return;
+
+      const payload = (await response.json()) as InvestigationBatchCacheResponse;
+      if (Object.keys(payload.resultsByStationId).length > 0) {
+        hydrateSavedQuickActionResults(nextStations.length, payload.resultsByStationId);
+      }
+    } catch {
+      // Saved batch data is a convenience; investigation still works without it.
+    }
+  }
+
   useEffect(() => {
     async function loadStations() {
       try {
@@ -74,6 +100,7 @@ export function TelemetryInvestigationDashboard() {
         setStationSource(payload.source);
         const firstStationId = payload.stations[0]?.id ?? stationId;
         if (firstStationId !== stationId) setStationId(firstStationId);
+        void loadSavedBatchInvestigations(payload.stations);
       } catch (requestError) {
         setError(requestError instanceof Error ? requestError.message : "Unknown station list error");
       }
@@ -214,7 +241,7 @@ export function TelemetryInvestigationDashboard() {
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-375 gap-4 px-5 py-5 xl:grid-cols-[320px_minmax(0,1fr)_420px]">
+      <main className="mx-auto grid max-w-375 gap-4 px-5 py-5 lg:grid-cols-[320px_minmax(0,1fr)]">
         <InvestigationScopePanel
           stations={stations}
           stationId={stationId}
@@ -237,7 +264,16 @@ export function TelemetryInvestigationDashboard() {
           quickActionResultsByStationId={quickActionStatus !== "idle" ? quickActionResultsByStationId : undefined}
         />
 
-        <section className="grid gap-4">
+        <section className="grid min-w-0 gap-4">
+          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#69766d]">
+                Investigation workspace
+              </p>
+              <h2 className="mt-1 text-xl font-semibold text-[#1f2d25]">Evidence first, assistance on demand</h2>
+            </div>
+            <span className="status-chip">{sourceLabel}</span>
+          </div>
           {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
           {quickActionError ? <div className="panel border-[#c76f59] text-[#843722]">{quickActionError}</div> : null}
           <SummaryStats
@@ -257,16 +293,16 @@ export function TelemetryInvestigationDashboard() {
             metricAnalyses={displayedData?.metricAnalyses}
           />
         </section>
-
-        <CopilotPanel
-          question={question}
-          metric={metric}
-          data={displayedData}
-          loading={loading}
-          onQuestionChange={setQuestion}
-          onRun={() => void runInvestigation({ askCopilot: true })}
-        />
       </main>
+
+      <CopilotPanel
+        question={question}
+        metric={metric}
+        data={displayedData}
+        loading={loading}
+        onQuestionChange={setQuestion}
+        onRun={() => void runInvestigation({ askCopilot: true })}
+      />
     </div>
   );
 }
