@@ -108,6 +108,30 @@ textarea {
   box-shadow: 0 8px 18px rgba(24, 33, 29, 0.12);
 }
 
+.footer-link {
+  display: inline-flex;
+  min-height: 34px;
+  align-items: center;
+  border-radius: 6px;
+  border: 1px solid #d8ded5;
+  background: #fbfcfa;
+  padding: 7px 10px;
+  color: #26372d;
+  text-decoration: none;
+  transition: border-color 120ms ease, background 120ms ease;
+}
+
+.footer-link:hover {
+  border-color: #2d6a4f;
+  background: #f0f5ef;
+}
+
+.footer-link-active {
+  border-color: #244d3d;
+  background: #eef4ed;
+  color: #244d3d;
+}
+
 .question-button {
   text-align: left;
 }
