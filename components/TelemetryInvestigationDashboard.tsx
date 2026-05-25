@@ -234,6 +234,7 @@ export function TelemetryInvestigationDashboard() {
           onQuickInvestigateEveryStation={() => void runInvestigateEveryStation()}
           quickActionBusy={quickActionRunning}
           quickActionProgress={`${quickActionCompletedStations}/${quickActionTotalStations}`}
+          quickActionResultsByStationId={quickActionStatus !== "idle" ? quickActionResultsByStationId : undefined}
         />
 
         <section className="grid gap-4">

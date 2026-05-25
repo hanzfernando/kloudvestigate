@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
-import type { MetricOption } from "./types";
+import type { InvestigationResponse, MetricOption } from "./types";
 
 const quickCommands: Array<{ label: string; href: string }> = [
   { label: "Get Pubmat Heat Index (2PM)", href: "/pubmat?metric=heatIndex&interval=60&run=1" },
@@ -27,6 +27,7 @@ export function InvestigationScopePanel({
   onQuickInvestigateEveryStation,
   quickActionBusy,
   quickActionProgress,
+  quickActionResultsByStationId = {},
 }: {
   stations: StationMetadata[];
   stationId: string;
@@ -43,7 +44,10 @@ export function InvestigationScopePanel({
   onQuickInvestigateEveryStation?: () => void;
   quickActionBusy?: boolean;
   quickActionProgress?: string;
+  quickActionResultsByStationId?: Record<string, InvestigationResponse>;
 }) {
+  const hasQuickActionResults = quickActionBusy || Object.keys(quickActionResultsByStationId).length > 0;
+
   return (
     <aside className="panel h-fit">
       <h2 className="panel-title">Investigation Scope</h2>
@@ -107,8 +111,85 @@ export function InvestigationScopePanel({
           <p className="mt-2 text-xs leading-5 text-[#69766d]">
             Yesterday, full day, all metrics, 1-minute aggregation, throttled to 3 requests per second.
           </p>
+          {hasQuickActionResults ? (
+            <div className="mt-4 border-t border-[#dbe1d8] pt-4">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Station summary</p>
+                {quickActionProgress ? <span className="text-xs text-[#69766d]">{quickActionProgress}</span> : null}
+              </div>
+              <div className="mt-3 max-h-[420px] overflow-auto rounded-[6px] border border-[#dbe1d8] bg-white">
+                {stations.map((station) => {
+                  const result = quickActionResultsByStationId[station.id];
+                  const counts = getStationIssueCounts(result);
+                  const isSelected = station.id === stationId;
+
+                  return (
+                    <button
+                      className={`grid w-full gap-2 border-b border-[#edf0ea] p-3 text-left last:border-b-0 hover:bg-[#f7f9f6] ${isSelected ? "bg-[#eef5ef]" : ""}`}
+                      key={station.id}
+                      type="button"
+                      onClick={() => onStationChange(station.id)}
+                    >
+                      <span className="min-w-0 truncate text-sm font-semibold text-[#26372d]">{station.name}</span>
+                      {result ? (
+                        <span className="grid grid-cols-3 gap-2 text-xs text-[#4d5d53]">
+                          <IssueCount label="Missing" value={counts.missing} tone={counts.missing ? "caution" : "neutral"} />
+                          <IssueCount label="Range" value={counts.outOfRange} tone={counts.outOfRange ? "danger" : "neutral"} />
+                          <IssueCount label="Warnings" value={counts.warnings} tone={counts.warnings ? "danger" : "neutral"} />
+                        </span>
+                      ) : (
+                        <span className="text-xs text-[#69766d]">{quickActionBusy ? "Pending" : "No quick-action data"}</span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          ) : null}
         </div>
       ) : null}
     </aside>
+  );
+}
+
+function getStationIssueCounts(result?: InvestigationResponse) {
+  if (result?.metricAnalyses?.length) {
+    return result.metricAnalyses.reduce(
+      (counts, item) => ({
+        missing: counts.missing + item.analysis.summary.missingRecordCount,
+        outOfRange: counts.outOfRange + item.analysis.rangeViolations.length,
+        warnings: counts.warnings + item.analysis.thresholdCrossings.length,
+      }),
+      { missing: 0, outOfRange: 0, warnings: 0 },
+    );
+  }
+
+  return {
+    missing: result?.analysis.summary.missingRecordCount ?? 0,
+    outOfRange: result?.analysis.rangeViolations.length ?? 0,
+    warnings: result?.analysis.thresholdCrossings.length ?? 0,
+  };
+}
+
+function IssueCount({
+  label,
+  value,
+  tone,
+}: {
+  label: string;
+  value: number;
+  tone: "neutral" | "caution" | "danger";
+}) {
+  const toneClass = tone === "danger"
+    ? "text-[#92351f]"
+    : tone === "caution"
+      ? "text-[#755010]"
+      : "text-[#68766d]";
+
+  return (
+    <span className="grid gap-1">
+      <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[#69766d]">{label}</span>
+      <span className={`font-mono text-sm font-semibold ${toneClass}`}>{value}</span>
+    </span>
   );
 }
