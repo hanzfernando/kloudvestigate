@@ -1,10 +1,9 @@
 "use client";
 import Link from "next/link";
 import Image from "next/image";
-import { Moon, Sun } from "lucide-react";
 import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 import type { ReactNode } from "react";
+import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
 
 export type PageNavLink = {
   href: string;
@@ -22,10 +21,6 @@ const SECONDARY_NAV_LINKS: PageNavLink[] = [
   { href: "/debug/ai-context", label: "AI Context Viewer" },
 ];
 
-type ThemeMode = "light" | "dark";
-
-const THEME_STORAGE_KEY = "kloudvestigate-theme";
-
 type PageShellProps = {
   eyebrow: string;
   title: string;
@@ -35,22 +30,6 @@ type PageShellProps = {
 
 export function PageShell({ eyebrow, title, description, children }: PageShellProps) {
   const pathname = usePathname();
-  const [theme, setTheme] = useState<ThemeMode>(getPreferredTheme);
-
-  useEffect(() => {
-    applyTheme(theme);
-  }, [theme]);
-
-  function toggleTheme() {
-    setTheme((currentTheme) => {
-      const nextTheme = currentTheme === "dark" ? "light" : "dark";
-
-      window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-      applyTheme(nextTheme);
-
-      return nextTheme;
-    });
-  }
 
   return (
     <div className="min-h-screen bg-background px-5 py-6 text-foreground">
@@ -78,20 +57,7 @@ export function PageShell({ eyebrow, title, description, children }: PageShellPr
                 </Link>
               ))}
             </nav>
-            <button
-              aria-label={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-              aria-pressed={theme === "dark"}
-              className="icon-button"
-              onClick={toggleTheme}
-              title={`Switch to ${theme === "dark" ? "light" : "dark"} theme`}
-              type="button"
-            >
-              {theme === "dark" ? (
-                <Sun aria-hidden="true" className="h-4 w-4" />
-              ) : (
-                <Moon aria-hidden="true" className="h-4 w-4" />
-              )}
-            </button>
+            <ThemeToggleButton />
           </div>
         </div>
 
@@ -167,18 +133,4 @@ export function PageShell({ eyebrow, title, description, children }: PageShellPr
 
 function isActiveLink(pathname: string, href: string) {
   return pathname === href || (href !== "/" && pathname.startsWith(`${href}/`));
-}
-
-function getPreferredTheme(): ThemeMode {
-  if (typeof window === "undefined") return "light";
-
-  const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  if (savedTheme === "dark" || savedTheme === "light") return savedTheme;
-
-  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
-}
-
-function applyTheme(theme: ThemeMode) {
-  document.documentElement.classList.toggle("dark", theme === "dark");
-  document.documentElement.style.colorScheme = theme;
 }
