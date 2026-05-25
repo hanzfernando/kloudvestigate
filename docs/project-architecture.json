@@ -1,6 +1,6 @@
 {
   "project": {
-    "name": "kloud-copilot",
+    "name": "kloudvestigate",
     "purpose": "Internal telemetry investigation and publication-material preparation tool for KloudTrack station data.",
     "framework": "Next.js 16.2.6 App Router with React 19.2.4 and TypeScript.",
     "tokenSavingSummary": "Use this file as the compact project map for future model work. The app has server-rendered App Router pages, small client islands for dashboards and Mermaid rendering, route-handler APIs as the backend-for-frontend layer, server-only KloudTrack and Gemini calls, deterministic telemetry analysis before AI explanation, Prisma schema for future persistence, and demo data fallback when upstream tokens are missing."
