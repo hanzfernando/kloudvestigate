@@ -1,7 +1,7 @@
 "use client";
 
-import Link from "next/link";
 import { useEffect, useState } from "react";
+import { PageShell } from "./layout/PageShell";
 import type { InvestigationMetricKey, StationMetadata } from "@/lib/telemetry-types";
 import { CopilotPanel } from "./telemetry/CopilotPanel";
 import { EventsPanel } from "./telemetry/EventsPanel";
@@ -222,27 +222,11 @@ export function TelemetryInvestigationDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f4f6f3] text-[#18211d]">
-      <header className="border-b border-[#d8ded5] bg-[#fbfcfa]">
-        <div className="mx-auto flex max-w-375 flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">
-              Internal telemetry intelligence
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
-              Telemetry Investigation Copilot
-            </h1>
-          </div>
-          <nav className="flex flex-wrap gap-2 text-sm">
-            <Link className="nav-pill" href="/pubmat">Pubmat table</Link>
-            <Link className="nav-pill" href="/architecture">Architecture</Link>
-            <Link className="nav-pill" href="/config">Metric config</Link>
-            <Link className="nav-pill" href="/debug/ai-context">AI context viewer</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="mx-auto grid max-w-375 gap-4 px-5 py-5 lg:grid-cols-[320px_minmax(0,1fr)]">
+    <PageShell
+      eyebrow="Internal telemetry intelligence"
+      title="Telemetry Investigation Copilot"
+    >
+      <main className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         <InvestigationScopePanel
           stations={stations}
           stationId={stationId}
@@ -266,33 +250,35 @@ export function TelemetryInvestigationDashboard() {
         />
 
         <section className="grid min-w-0 gap-4">
-          <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#69766d]">
-                Investigation workspace
-              </p>
-              <h2 className="mt-1 text-xl font-semibold text-[#1f2d25]">Evidence first, assistance on demand</h2>
+          <div className="panel flex flex-col gap-3">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#69766d]">
+                  Investigation workspace
+                </p>
+                <h2 className="mt-1 text-xl font-semibold text-[#1f2d25]">Evidence first, assistance on demand</h2>
+              </div>
+              <span className="status-chip">{sourceLabel}</span>
             </div>
-            <span className="status-chip">{sourceLabel}</span>
+            {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
+            {quickActionError ? <div className="panel border-[#c76f59] text-[#843722]">{quickActionError}</div> : null}
+            <SummaryStats
+              analysis={displayedData?.analysis}
+              metricAnalyses={displayedData?.metricAnalyses}
+            />
+            <OutlierOverview analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
+            <TelemetryTimeline
+              analysis={displayedData?.analysis}
+              metricAnalyses={displayedData?.metricAnalyses}
+              sourceLabel={sourceLabel}
+            />
+            <EventsPanel analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
+            <FetchedValuesTable
+              analysis={displayedData?.analysis}
+              records={displayedData?.records ?? []}
+              metricAnalyses={displayedData?.metricAnalyses}
+            />
           </div>
-          {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
-          {quickActionError ? <div className="panel border-[#c76f59] text-[#843722]">{quickActionError}</div> : null}
-          <SummaryStats
-            analysis={displayedData?.analysis}
-            metricAnalyses={displayedData?.metricAnalyses}
-          />
-          <OutlierOverview analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
-          <TelemetryTimeline
-            analysis={displayedData?.analysis}
-            metricAnalyses={displayedData?.metricAnalyses}
-            sourceLabel={sourceLabel}
-          />
-          <EventsPanel analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
-          <FetchedValuesTable
-            analysis={displayedData?.analysis}
-            records={displayedData?.records ?? []}
-            metricAnalyses={displayedData?.metricAnalyses}
-          />
         </section>
       </main>
 
@@ -304,7 +290,7 @@ export function TelemetryInvestigationDashboard() {
         onQuestionChange={setQuestion}
         onRun={() => void runInvestigation({ askCopilot: true })}
       />
-    </div>
+    </PageShell>
   );
 }
 

@@ -7,12 +7,6 @@ export default function AiContextDebugPage() {
     <PageShell
       eyebrow="Developer diagnostics"
       title="AI Request Context Viewer"
-      navLinks={[
-        { href: "/", label: "Dashboard" },
-        { href: "/pubmat", label: "Pubmat" },
-        { href: "/config", label: "Metric config" },
-        { href: "/architecture", label: "Architecture" },
-      ]}
     >
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <section className="panel">

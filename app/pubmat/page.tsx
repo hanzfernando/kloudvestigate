@@ -18,12 +18,6 @@ export default async function PubmatPage({ searchParams }: PubmatPageProps) {
     <PageShell
       eyebrow="Pubmat data prep"
       title="Station Aggregate Table"
-      navLinks={[
-        { href: "/", label: "Investigation dashboard" },
-        { href: "/config", label: "Metric config" },
-        { href: "/architecture", label: "Architecture" },
-        { href: "/debug/ai-context", label: "AI context viewer" },
-      ]}
     >
       <main className="grid gap-5">
         <PubmatWorkspace

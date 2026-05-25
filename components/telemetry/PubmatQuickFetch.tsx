@@ -26,7 +26,7 @@ const intervalOptions = [
 export function PubmatQuickFetch({
   autoRun = false,
   initialIntervalMinutes = 60,
-  initialMetric = "rainfall",
+  initialMetric = "temperature",
   metrics,
   onDataChange,
 }: {

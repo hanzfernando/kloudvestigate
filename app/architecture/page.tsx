@@ -12,12 +12,6 @@ export default function ArchitecturePage() {
       eyebrow="System design"
       title="Telemetry Copilot Architecture"
       description={data.project.tokenSavingSummary}
-      navLinks={[
-        { href: "/", label: "Dashboard" },
-        { href: "/pubmat", label: "Pubmat" },
-        { href: "/config", label: "Metric config" },
-        { href: "/debug/ai-context", label: "AI context viewer" },
-      ]}
     >
       <div className="grid gap-4">
         <section className="grid gap-4 lg:grid-cols-3">

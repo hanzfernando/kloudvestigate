@@ -26,12 +26,6 @@ export default async function ConfigPage() {
           Saved overrides apply to investigation analysis and pubmat classification.
         </>
       )}
-      navLinks={[
-        { href: "/", label: "Dashboard" },
-        { href: "/pubmat", label: "Pubmat" },
-        { href: "/architecture", label: "Architecture" },
-        { href: "/debug/ai-context", label: "AI context viewer" },
-      ]}
     >
       <MetricRangeConfigPanel initialOverrides={initialOverrides} metrics={metrics} />
     </PageShell>
