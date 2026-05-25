@@ -13,12 +13,12 @@ mermaid.initialize({
   securityLevel: "strict",
   theme: "base",
   themeVariables: {
-    primaryColor: "#eef4ed",
-    primaryTextColor: "#18211d",
-    primaryBorderColor: "#8aa091",
-    lineColor: "#557064",
-    secondaryColor: "#fff8e8",
-    tertiaryColor: "#ffffff",
+    primaryColor: "var(--mermaid-primary)",
+    primaryTextColor: "var(--foreground)",
+    primaryBorderColor: "var(--mermaid-primary-border)",
+    lineColor: "var(--mermaid-line)",
+    secondaryColor: "var(--mermaid-secondary)",
+    tertiaryColor: "var(--surface)",
     fontFamily: "Arial, Helvetica, sans-serif"
   }
 });
@@ -56,7 +56,7 @@ export function MermaidDiagram({ chart, title }: MermaidDiagramProps) {
 
   if (error) {
     return (
-      <pre className="mt-4 overflow-x-auto rounded border border-[#e1b0a2] bg-[#fff7f4] p-4 text-xs leading-5 text-[#6f2718]">
+      <pre className="mt-4 overflow-x-auto rounded border border-danger-border bg-danger-surface-muted p-4 text-xs leading-5 text-danger-foreground-strong">
         {error}
       </pre>
     );
@@ -65,7 +65,7 @@ export function MermaidDiagram({ chart, title }: MermaidDiagramProps) {
   return (
     <div
       aria-label={title}
-      className="mermaid-surface mt-4 overflow-x-auto rounded border border-[#dbe1d8] bg-white p-4"
+      className="mermaid-surface mt-4 overflow-x-auto rounded border border-border-subtle bg-surface p-4"
       dangerouslySetInnerHTML={{ __html: svg }}
       role="img"
     />

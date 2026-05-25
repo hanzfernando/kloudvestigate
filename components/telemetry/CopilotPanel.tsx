@@ -36,10 +36,10 @@ export function CopilotPanel({
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="flex items-center gap-2">
-                <Sparkles className="h-4 w-4 text-[#31563f]" aria-hidden="true" />
+                <Sparkles className="h-4 w-4 text-success-foreground" aria-hidden="true" />
                 <h2 className="panel-title">Copilot</h2>
               </div>
-              <p className="mt-1 text-sm text-[#5f6b63]">{metricLabel}</p>
+              <p className="mt-1 text-sm text-muted-foreground">{metricLabel}</p>
             </div>
             <div className="flex items-center gap-2">
               {data?.aiProvider ? <span className="status-chip">{providerLabel}</span> : null}
@@ -69,29 +69,29 @@ export function CopilotPanel({
           </button>
 
           {data?.aiError ? (
-            <p className="mt-3 rounded-md border border-[#e1b0a2] bg-[#fff1ed] p-3 text-sm text-[#92351f]">
+            <p className="mt-3 rounded-md border border-danger-border bg-danger-surface p-3 text-sm text-danger-foreground">
               {data.aiError}
             </p>
           ) : null}
 
           {data?.aiWarning ? (
-            <p className="mt-3 rounded-md border border-[#dfc58d] bg-[#fff8e8] p-3 text-sm text-[#755010]">
+            <p className="mt-3 rounded-md border border-warning-border bg-warning-surface p-3 text-sm text-warning-foreground">
               {data.aiWarning}
             </p>
           ) : null}
 
-          <div className="mt-4 border-t border-[#dbe1d8] pt-4 text-sm leading-6 text-[#26372d]">
+          <div className="mt-4 border-t border-border-subtle pt-4 text-sm leading-6 text-card-foreground">
             {data?.answer ? (
               <MarkdownRenderer text={data.answer} />
             ) : data ? (
-              <p className="text-[#68766d]">Investigation loaded. Click Ask copilot to generate an answer.</p>
+              <p className="text-label">Investigation loaded. Click Ask copilot to generate an answer.</p>
             ) : (
-              <p className="text-[#68766d]">Run an investigation to load telemetry, then ask copilot manually.</p>
+              <p className="text-label">Run an investigation to load telemetry, then ask copilot manually.</p>
             )}
           </div>
 
           {data ? (
-            <div className="mt-4 grid gap-2 border-t border-[#dbe1d8] pt-4 text-xs text-[#68766d]">
+            <div className="mt-4 grid gap-2 border-t border-border-subtle pt-4 text-xs text-label">
               <p>Station: {data.station.name}</p>
               <p>Records analyzed: {data.records.length}</p>
               {data.aiFinishReason ? <p>AI finish reason: {data.aiFinishReason}</p> : null}
@@ -112,7 +112,7 @@ export function CopilotPanel({
       >
         <MessageCircle className="h-5 w-5" aria-hidden="true" />
         {hasAnswer ? (
-          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-[#fbfcfa] bg-[#b9472b]" />
+          <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full border-2 border-card bg-danger" />
         ) : null}
       </button>
     </div>

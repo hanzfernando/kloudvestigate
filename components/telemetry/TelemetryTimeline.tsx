@@ -21,11 +21,11 @@ export function TelemetryTimeline({
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="panel-title">Telemetry Timeline</h2>
-          <p className="text-sm text-[#5f6b63]">
+          <p className="text-sm text-muted-foreground">
             Aggregated summaries with metric-specific ranges, spike limits, warnings, and missing-data markers.
           </p>
           {profile ? (
-            <p className="mt-1 text-xs text-[#6b786f]">
+            <p className="mt-1 text-xs text-label">
               Acceptable range: {profile.acceptableRange.minimum} to {profile.acceptableRange.maximum} {profile.unit};
               spike limit: {profile.spikeDelta} {profile.unit}.
             </p>
@@ -65,13 +65,13 @@ function TelemetryChart({
   );
 
   return (
-    <div className="relative overflow-visible rounded border border-[#dbe1d8] bg-white">
+    <div className="relative overflow-visible rounded border border-border-subtle bg-surface">
       <svg viewBox={`0 0 ${width} ${height}`} className="h-[260px] w-full" role="img" aria-label="Telemetry max value line chart">
-        <rect width={width} height={height} fill="#ffffff" />
+        <rect width={width} height={height} fill="var(--surface)" />
         {[0, 1, 2, 3].map((line) => (
-          <line key={line} x1="0" x2={width} y1={line * 65} y2={line * 65} stroke="#e3e8df" />
+          <line key={line} x1="0" x2={width} y1={line * 65} y2={line * 65} stroke="var(--chart-grid)" />
         ))}
-        <polyline fill="none" stroke="#2d6a4f" strokeWidth="3" points={polylinePoints} />
+        <polyline fill="none" stroke="var(--chart-line)" strokeWidth="3" points={polylinePoints} />
         {points.map(({ item, x, y }) => {
           const color = getIntervalColor(item);
           return (
@@ -86,7 +86,7 @@ function TelemetryChart({
               onMouseLeave={() => setActivePoint(null)}
             >
               <circle cx={x} cy={y} r="12" fill="transparent" />
-              <circle cx={x} cy={y} r="4.5" fill={color} stroke="#ffffff" strokeWidth="2" />
+              <circle cx={x} cy={y} r="4.5" fill={color} stroke="var(--surface)" strokeWidth="2" />
             </g>
           );
         })}
@@ -123,31 +123,31 @@ function TimelineTooltip({
 
   return (
     <div
-      className="pointer-events-none absolute z-20 min-w-58 max-w-80 rounded-[6px] border border-[#cfd7cc] bg-[#fbfcfa] p-3 text-xs shadow-lg"
+      className="pointer-events-none absolute z-20 min-w-58 max-w-80 rounded-[6px] border border-border-strong bg-card p-3 text-xs shadow-lg"
       style={{
         left: `${left}%`,
         top: `${top}%`,
         transform: alignRight ? "translate(-100%, calc(-100% - 12px))" : "translate(12px, calc(-100% - 12px))",
       }}
     >
-      <p className="font-semibold text-[#26372d]">
+      <p className="font-semibold text-card-foreground">
         {formatTime(activePoint.interval.start)}
       </p>
-      <p className="mt-1 text-[#6b786f]">
+      <p className="mt-1 text-label">
         to {formatTime(activePoint.interval.end)}
       </p>
       <div className="mt-3 grid gap-2">
         {activePoint.values.length ? activePoint.values.map((item) => (
           <div className="flex items-center justify-between gap-4" key={item.label}>
-            <span className="text-[#4d5d53]">{item.label}</span>
-            <span className="font-mono font-semibold text-[#18211d]">
+            <span className="text-subtle-foreground">{item.label}</span>
+            <span className="font-mono font-semibold text-foreground">
               {formatMetricValue(item.maximum)} {item.unit}
             </span>
           </div>
         )) : (
           <div className="flex items-center justify-between gap-4">
-            <span className="text-[#4d5d53]">Maximum</span>
-            <span className="font-mono font-semibold text-[#18211d]">
+            <span className="text-subtle-foreground">Maximum</span>
+            <span className="font-mono font-semibold text-foreground">
               {formatMetricValue(activePoint.interval.maximum)}
             </span>
           </div>
@@ -204,7 +204,7 @@ function formatMetricValue(value: number) {
 }
 
 function getIntervalColor(item: IntervalSummary) {
-  if (item.dominantWarningLevel === "Critical" || item.dominantWarningLevel === "Warning") return "#b9472b";
-  if (item.missingCount) return "#b7791f";
-  return "#2d6a4f";
+  if (item.dominantWarningLevel === "Critical" || item.dominantWarningLevel === "Warning") return "var(--danger)";
+  if (item.missingCount) return "var(--warning)";
+  return "var(--chart-line)";
 }

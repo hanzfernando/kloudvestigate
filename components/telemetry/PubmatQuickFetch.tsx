@@ -145,7 +145,7 @@ export function PubmatQuickFetch({
         <div className="flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
           <div className="max-w-4xl">
           <h2 className="panel-title">Pubmat Quick Fetch</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#5f6b63]">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
             One backend job fetches the padded aggregate bucket for every station with server-side throttling.
           </p>
         </div>
@@ -186,14 +186,14 @@ export function PubmatQuickFetch({
           </label>
         </div>
 
-        <div className="grid gap-5 border-y border-[#dbe1d8] py-5 text-sm text-[#4d5d53] lg:grid-cols-2">
+        <div className="grid gap-5 border-y border-border-subtle py-5 text-sm text-subtle-foreground lg:grid-cols-2">
           <div className="grid gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Target bucket</span>
-            <span className="leading-6 text-[#26372d]">{formatTime(window.bucketStart)} to {formatTime(window.bucketEnd)}</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-label">Target bucket</span>
+            <span className="leading-6 text-card-foreground">{formatTime(window.bucketStart)} to {formatTime(window.bucketEnd)}</span>
           </div>
           <div className="grid gap-1">
-            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">Fetched safely</span>
-            <span className="leading-6 text-[#26372d]">{formatTime(window.fetchStart)} to {formatTime(window.fetchEnd)}</span>
+            <span className="text-xs font-semibold uppercase tracking-[0.14em] text-label">Fetched safely</span>
+            <span className="leading-6 text-card-foreground">{formatTime(window.fetchStart)} to {formatTime(window.fetchEnd)}</span>
           </div>
         </div>
 
@@ -212,19 +212,19 @@ export function PubmatQuickFetch({
           </button>
         </div>
 
-        {error ? <div className="rounded-[6px] border border-[#c76f59] bg-white p-3 text-sm text-[#843722]">{error}</div> : null}
+        {error ? <div className="rounded-[6px] border border-danger-strong bg-surface p-3 text-sm text-danger-foreground-muted">{error}</div> : null}
 
         {results.length ? (
-          <div className="overflow-auto border-t border-[#dbe1d8] pt-5">
+          <div className="overflow-auto border-t border-border-subtle pt-5">
             <table className="ops-table">
               <thead>
                 <tr>
-                  <th className="sticky top-0 z-10 bg-[#eef2ec]">Station</th>
-                  <th className="sticky top-0 z-10 bg-[#eef2ec]">Class</th>
+                  <th className="sticky top-0 z-10 bg-surface-table-header">Station</th>
+                  <th className="sticky top-0 z-10 bg-surface-table-header">Class</th>
                   {selectedMetricKeys.map((key) => (
-                    <th className="sticky top-0 z-10 bg-[#eef2ec]" key={key}>{getMetricAnalysisProfile(key).label}</th>
+                    <th className="sticky top-0 z-10 bg-surface-table-header" key={key}>{getMetricAnalysisProfile(key).label}</th>
                   ))}
-                  <th className="sticky top-0 z-10 bg-[#eef2ec]">Notes</th>
+                  <th className="sticky top-0 z-10 bg-surface-table-header">Notes</th>
                 </tr>
               </thead>
               <tbody>
@@ -233,7 +233,7 @@ export function PubmatQuickFetch({
                     <td>
                       <div className="grid gap-1">
                         <span className="font-semibold">{result.station.name}</span>
-                        <span className="font-mono text-xs text-[#69766d]">{result.station.id}</span>
+                        <span className="font-mono text-xs text-label">{result.station.id}</span>
                       </div>
                     </td>
                     <td><StatusChip status={result.status} /></td>
@@ -242,7 +242,7 @@ export function PubmatQuickFetch({
                         {formatValue(result.values[key])}
                       </td>
                     ))}
-                    <td className="text-sm text-[#5f6b63]">
+                    <td className="text-sm text-muted-foreground">
                       {result.error ?? (result.classifications.join(", ") || "ok")}
                     </td>
                   </tr>

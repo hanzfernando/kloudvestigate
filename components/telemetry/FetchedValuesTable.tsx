@@ -81,7 +81,7 @@ export function FetchedValuesTable({
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="panel-title">Fetched Values</h2>
-          <p className="mt-1 text-sm text-[#5f6b63]">
+          <p className="mt-1 text-sm text-muted-foreground">
             All normalized records returned from the selected history endpoint. Outlier rows are highlighted.
           </p>
         </div>
@@ -103,7 +103,7 @@ export function FetchedValuesTable({
         <table className="ops-table">
           <thead>
             <tr>
-              <th className="sticky top-0 z-10 bg-[#eef2ec]">
+              <th className="sticky top-0 z-10 bg-surface-table-header">
                 <button
                   className="flex w-full items-center justify-between gap-2 text-left"
                   type="button"
@@ -114,7 +114,7 @@ export function FetchedValuesTable({
                 </button>
               </th>
               {series.map((item) => (
-                <th className="sticky top-0 z-10 bg-[#eef2ec]" key={item.metric}>{item.label}</th>
+                <th className="sticky top-0 z-10 bg-surface-table-header" key={item.metric}>{item.label}</th>
               ))}
             </tr>
           </thead>
@@ -127,7 +127,7 @@ export function FetchedValuesTable({
                   if (!value) {
                     return (
                       <td key={`${timestamp}-${item.metric}`}>
-                        <span className="text-[#9aa59d]">-</span>
+                        <span className="text-chart-empty">-</span>
                       </td>
                     );
                   }

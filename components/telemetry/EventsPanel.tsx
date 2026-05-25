@@ -37,7 +37,7 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="panel-title">Event Signals</h2>
-          <p className="mt-1 text-sm text-[#5f6b63]">
+          <p className="mt-1 text-sm text-muted-foreground">
             Timestamped spikes, range violations, and data-quality anomalies.
           </p>
         </div>
@@ -50,15 +50,15 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
       </div>
 
       <details
-        className="mt-3 rounded-lg border border-[#d8ded5] bg-[#f6f8f5]"
+        className="mt-3 rounded-lg border border-border bg-surface-muted"
         open={totalsExpanded}
         onToggle={(event) => setTotalsExpanded(event.currentTarget.open)}
       >
-        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-[#32453b]">
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-2 px-3 py-2 text-sm font-semibold text-card-foreground">
           <span>Totals breakdown</span>
-          <span className="text-xs text-[#5f6b63]">{totalsExpanded ? "Collapse" : "Expand totals"}</span>
+          <span className="text-xs text-muted-foreground">{totalsExpanded ? "Collapse" : "Expand totals"}</span>
         </summary>
-        <div className="border-t border-[#d8ded5] px-3 py-2">
+        <div className="border-t border-border px-3 py-2">
           <div className="flex flex-wrap items-center gap-2">
             <span className="count-chip count-chip-danger">{activeViolations} range violations</span>
             <span className="count-chip count-chip-caution">{activeSpikes} spikes</span>
@@ -70,7 +70,7 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
 
       <div className="mt-3 grid gap-3">
       {analyses.length > 1 && (
-        <div className="inline-flex w-full flex-wrap gap-1 rounded-xl border border-[#d8ded5] bg-[#f2f5f1] p-1">
+        <div className="inline-flex w-full flex-wrap gap-1 rounded-xl border border-border bg-accent-muted-surface p-1">
           {analyses.map(({ metric, analysis: ma }) => {
             const spikes = ma.spikes.length;
             const violations = ma.rangeViolations.length;
@@ -84,8 +84,8 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
                 onClick={() => setActiveMetric(metric)}
                 className={`flex items-center gap-2.5 rounded-lg px-3 py-1.5 text-sm transition-colors
                   ${isActive
-                    ? "border border-[#d0d8cf] bg-white font-medium text-[#1f2d25]"
-                    : "border border-transparent text-[#5f6b63] hover:bg-white/70 hover:text-[#1f2d25]"
+                    ? "border border-accent-border bg-surface font-medium text-heading"
+                    : "border border-transparent text-muted-foreground hover:bg-surface/70 hover:text-heading"
                   }`}
                 type="button"
               >
@@ -109,7 +109,7 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
       )}
 
       {!showLists ? (
-        <p className="rounded-lg border border-[#d8ded5] bg-[#f6f8f5] px-3 py-2 text-sm text-[#5f6b63]">
+        <p className="rounded-lg border border-border bg-surface-muted px-3 py-2 text-sm text-muted-foreground">
           Event lists are collapsed. Expand lists to inspect all timestamps.
         </p>
       ) : (

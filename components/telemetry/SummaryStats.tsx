@@ -56,7 +56,7 @@ function Stat({
 
   return (
     <div className={className}>
-      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-[#69766d]">{label}</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-label">{label}</p>
       <p className="mt-2 text-2xl font-semibold">{value}</p>
     </div>
   );

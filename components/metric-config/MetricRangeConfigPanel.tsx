@@ -73,7 +73,7 @@ export function MetricRangeConfigPanel({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h2 className="panel-title">Acceptable Range Overrides</h2>
-          <p className="mt-2 max-w-3xl text-sm leading-6 text-[#526258]">
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-muted-foreground">
             Start from the metric profile defaults, then override only the metrics that need a different acceptable range.
           </p>
         </div>
@@ -88,7 +88,7 @@ export function MetricRangeConfigPanel({
         </div>
       </div>
 
-      {status ? <p className="mt-3 text-sm text-[#526258]">{status}</p> : null}
+      {status ? <p className="mt-3 text-sm text-muted-foreground">{status}</p> : null}
 
       <div className="mt-4 grid gap-3">
         {metrics.map((metric) => {
@@ -96,16 +96,16 @@ export function MetricRangeConfigPanel({
           const isCustom = draftRow.minimum !== String(metric.defaultRange.minimum) || draftRow.maximum !== String(metric.defaultRange.maximum);
 
           return (
-            <div className={`rounded border p-4 ${isCustom ? "border-[#b8c9bb] bg-[#f4f8f2]" : "border-[#dbe1d8] bg-white"}`} key={metric.metric}>
+            <div className={`rounded border p-4 ${isCustom ? "border-accent-border bg-accent-surface" : "border-border-subtle bg-surface"}`} key={metric.metric}>
               <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
                 <div>
                   <div className="flex flex-wrap items-center gap-2">
-                    <h3 className="text-lg font-semibold text-[#1f2d25]">{metric.label}</h3>
+                    <h3 className="text-lg font-semibold text-heading">{metric.label}</h3>
                     <span className="status-chip">{metric.metric}</span>
                     <span className="status-chip">{metric.unit}</span>
                     {isCustom ? <span className="status-chip">custom</span> : <span className="status-chip">default</span>}
                   </div>
-                  <p className="mt-1 text-sm text-[#526258]">
+                  <p className="mt-1 text-sm text-muted-foreground">
                     Default range: {metric.defaultRange.minimum} to {metric.defaultRange.maximum} {metric.unit}
                   </p>
                 </div>

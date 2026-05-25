@@ -63,7 +63,7 @@ export function PubmatChatPanel({ data }: { data: PubmatQuickFetchResponse | nul
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between xl:flex-col xl:items-start">
         <div>
           <h2 className="panel-title">Pubmat Chat</h2>
-          <p className="mt-1 text-sm text-[#5f6b63]">
+          <p className="mt-1 text-sm text-muted-foreground">
             {data ? `${data.results.length} stations loaded` : "Fetch a table first"}
           </p>
         </div>
@@ -71,7 +71,7 @@ export function PubmatChatPanel({ data }: { data: PubmatQuickFetchResponse | nul
       </div>
 
       {data ? (
-        <div className="mt-4 grid gap-2 rounded-[6px] border border-[#dbe1d8] bg-white p-3 text-xs text-[#68766d]">
+        <div className="mt-4 grid gap-2 rounded-[6px] border border-border-subtle bg-surface p-3 text-xs text-label">
           <p>Bucket: {formatTime(data.window.bucketStart)} to {formatTime(data.window.bucketEnd)}</p>
           <p>Metric: {data.selection.metric}</p>
           <p>Source: {data.source === "kloudtrack" ? "KloudTrack API" : "Demo fallback"}</p>
@@ -92,35 +92,35 @@ export function PubmatChatPanel({ data }: { data: PubmatQuickFetchResponse | nul
       </button>
 
       {error ? (
-        <p className="mt-3 rounded-md border border-[#e1b0a2] bg-[#fff1ed] p-3 text-sm text-[#92351f]">
+        <p className="mt-3 rounded-md border border-danger-border bg-danger-surface p-3 text-sm text-danger-foreground">
           {error}
         </p>
       ) : null}
 
       {fallbackReason ? (
-        <p className="mt-3 rounded-md border border-[#dfc58d] bg-[#fff8e8] p-3 text-sm text-[#755010]">
+        <p className="mt-3 rounded-md border border-warning-border bg-warning-surface p-3 text-sm text-warning-foreground">
           Internal formatting fallback: {fallbackReason}
         </p>
       ) : null}
 
       {warning ? (
-        <p className="mt-3 rounded-md border border-[#dfc58d] bg-[#fff8e8] p-3 text-sm text-[#755010]">
+        <p className="mt-3 rounded-md border border-warning-border bg-warning-surface p-3 text-sm text-warning-foreground">
           {warning}
         </p>
       ) : null}
 
-      <div className="mt-4 border-t border-[#dbe1d8] pt-4 text-sm leading-6 text-[#26372d]">
+      <div className="mt-4 border-t border-border-subtle pt-4 text-sm leading-6 text-card-foreground">
         {answer ? (
           <MarkdownRenderer text={answer} />
         ) : data ? (
-          <p className="text-[#68766d]">Ask a question about the fetched station table.</p>
+          <p className="text-label">Ask a question about the fetched station table.</p>
         ) : (
-          <p className="text-[#68766d]">Fetch the pubmat table, then ask for summary, anomalies, or caption-ready copy.</p>
+          <p className="text-label">Fetch the pubmat table, then ask for summary, anomalies, or caption-ready copy.</p>
         )}
       </div>
 
       {finishReason ? (
-        <p className="mt-4 border-t border-[#dbe1d8] pt-4 text-xs text-[#68766d]">
+        <p className="mt-4 border-t border-border-subtle pt-4 text-xs text-label">
           AI finish reason: {finishReason}
         </p>
       ) : null}

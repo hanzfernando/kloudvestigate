@@ -29,7 +29,7 @@ export default function ArchitecturePage() {
             <div className="panel" key={diagram.id}>
               <div className="flex flex-col gap-1">
                 <h2 className="panel-title">{diagram.title}</h2>
-                <p className="text-sm leading-6 text-[#526258]">{diagram.description}</p>
+                <p className="text-sm leading-6 text-muted-foreground">{diagram.description}</p>
               </div>
               <MermaidDiagram chart={diagram.mermaid} title={diagram.title} />
             </div>
@@ -41,10 +41,10 @@ export default function ArchitecturePage() {
             <h2 className="panel-title">Major Modules</h2>
             <div className="mt-4 grid gap-3">
               {data.majorModules.map((module) => (
-                <div className="rounded border border-[#dbe1d8] bg-white p-3" key={module.name}>
-                  <h3 className="font-semibold text-[#1f2d25]">{module.name}</h3>
-                  <p className="mt-1 text-sm leading-6 text-[#39483f]">{module.responsibility}</p>
-                  <p className="mt-2 font-mono text-xs leading-5 text-[#607065]">{module.paths.join(", ")}</p>
+                <div className="rounded border border-border-subtle bg-surface p-3" key={module.name}>
+                  <h3 className="font-semibold text-heading">{module.name}</h3>
+                  <p className="mt-1 text-sm leading-6 text-body-copy">{module.responsibility}</p>
+                  <p className="mt-2 font-mono text-xs leading-5 text-code-foreground">{module.paths.join(", ")}</p>
                 </div>
               ))}
             </div>
@@ -61,9 +61,9 @@ export default function ArchitecturePage() {
             <h2 className="panel-title">Database Schema</h2>
             <div className="mt-4 grid gap-3">
               {data.database.map((model) => (
-                <div className="rounded border border-[#dbe1d8] bg-white p-3" key={model.model}>
-                  <h3 className="font-mono text-sm font-semibold text-[#1f2d25]">{model.model}</h3>
-                  <p className="mt-1 text-sm leading-6 text-[#39483f]">{model.notes}</p>
+                <div className="rounded border border-border-subtle bg-surface p-3" key={model.model}>
+                  <h3 className="font-mono text-sm font-semibold text-heading">{model.model}</h3>
+                  <p className="mt-1 text-sm leading-6 text-body-copy">{model.notes}</p>
                 </div>
               ))}
             </div>
@@ -71,7 +71,7 @@ export default function ArchitecturePage() {
 
           <div className="panel">
             <h2 className="panel-title">Future Work</h2>
-            <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#39483f]">
+            <ul className="mt-3 grid gap-2 text-sm leading-6 text-body-copy">
               {data.futureWork.map((item) => <li key={item}>{item}</li>)}
             </ul>
           </div>
@@ -85,7 +85,7 @@ function Info({ title, items }: { title: string; items: string[] }) {
   return (
     <div className="panel">
       <h2 className="panel-title">{title}</h2>
-      <ul className="mt-3 grid gap-2 text-sm leading-6 text-[#39483f]">
+      <ul className="mt-3 grid gap-2 text-sm leading-6 text-body-copy">
         {items.map((item) => <li key={item}>{item}</li>)}
       </ul>
     </div>

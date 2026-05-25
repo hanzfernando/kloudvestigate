@@ -18,7 +18,7 @@ export function EventList({ title, empty, items, tone = "neutral", maxVisible = 
   const styleTone = tone === "critical" ? "danger" : tone;
 
   return (
-    <div className="event-card rounded-lg border border-[#d8ded5] bg-white p-3 shadow-[0_1px_0_rgba(24,33,29,0.03)]">
+    <div className="event-card rounded-lg border border-border bg-surface p-3 shadow-hairline">
       <div className="card-header">
         <span className="card-label">{title}</span>
         <span className={`count-chip count-chip-${styleTone}`}>{items.length}</span>
@@ -39,7 +39,7 @@ export function EventList({ title, empty, items, tone = "neutral", maxVisible = 
       </div>
 
       {hasOverflow && (
-        <div className="mt-2 border-t border-[#e1e7de] pt-2">
+        <div className="mt-2 border-t border-border-faint pt-2">
           <button className="nav-pill w-full" type="button" onClick={() => setExpanded((current) => !current)}>
             {expanded ? "Show less" : `Show ${items.length - visibleItems.length} more`}
           </button>

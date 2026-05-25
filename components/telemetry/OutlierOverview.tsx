@@ -60,7 +60,7 @@ export function OutlierOverview({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="panel-title">Acceptable Range Audit</h2>
-            <p className="mt-1 text-sm text-[#5f6b63]">
+            <p className="mt-1 text-sm text-muted-foreground">
               One row per range-violation timestamp, with all metric readings shown and outlier cells highlighted.
             </p>
           </div>
@@ -79,7 +79,7 @@ export function OutlierOverview({
           </div>
         </div>
 
-        <p className="mt-3 text-sm text-[#5f6b63]">
+        <p className="mt-3 text-sm text-muted-foreground">
           {analyses.length > 1
             ? `Auditing ${analyses.length} metrics from the all-metric history response.`
             : analysis
@@ -114,7 +114,7 @@ function JoinedAuditTable({
   );
 
   if (!rows.length) {
-    return <p className="mt-4 text-sm text-[#5f6b63]">No range violations detected.</p>;
+    return <p className="mt-4 text-sm text-muted-foreground">No range violations detected.</p>;
   }
 
   function setSort(nextKey: AuditSortKey) {
@@ -132,7 +132,7 @@ function JoinedAuditTable({
       <table className="ops-table min-w-[1100px]">
         <thead>
           <tr>
-            <th className="sticky top-0 left-0 z-20 bg-[#eef2ec]">
+            <th className="sticky top-0 left-0 z-20 bg-surface-table-header">
               <SortableAuditHeader
                 label="Timestamp (PH)"
                 sortKey="timestamp"
@@ -142,7 +142,7 @@ function JoinedAuditTable({
               />
             </th>
             {metricColumns.map((metric) => (
-              <th className="sticky top-0 z-10 bg-[#eef2ec]" key={metric.key}>
+              <th className="sticky top-0 z-10 bg-surface-table-header" key={metric.key}>
                 <SortableAuditHeader
                   label={metric.label}
                   sortKey={metric.key}
@@ -157,7 +157,7 @@ function JoinedAuditTable({
         <tbody>
           {sortedRows.map((row) => (
             <tr key={row.timestamp}>
-              <td className="sticky left-0 z-10 bg-white font-mono">{formatTime(row.timestamp)}</td>
+              <td className="sticky left-0 z-10 bg-surface font-mono">{formatTime(row.timestamp)}</td>
               {metricColumns.map((metric) => {
                 const cell = row.cells[metric.key];
                 return (
@@ -174,7 +174,7 @@ function JoinedAuditTable({
                         </div>
                       </div>
                     ) : (
-                      <span className="text-[#9aa59d]">-</span>
+                      <span className="text-chart-empty">-</span>
                     )}
                   </td>
                 );
@@ -210,7 +210,7 @@ function SortableAuditHeader({
       onClick={() => onSort(sortKey)}
     >
       <span>{label}</span>
-      <SortIcon className="h-3.5 w-3.5 shrink-0 text-[#5f6b63]" aria-hidden="true" />
+      <SortIcon className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-hidden="true" />
     </button>
   );
 }

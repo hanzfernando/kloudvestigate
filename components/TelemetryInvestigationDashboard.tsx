@@ -253,15 +253,15 @@ export function TelemetryInvestigationDashboard() {
           <div className="panel flex flex-col gap-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#69766d]">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-label">
                   Investigation workspace
                 </p>
-                <h2 className="mt-1 text-xl font-semibold text-[#1f2d25]">Evidence first, assistance on demand</h2>
+                <h2 className="mt-1 text-xl font-semibold text-heading">Evidence first, assistance on demand</h2>
               </div>
               <span className="status-chip">{sourceLabel}</span>
             </div>
-            {error ? <div className="panel border-[#c76f59] text-[#843722]">{error}</div> : null}
-            {quickActionError ? <div className="panel border-[#c76f59] text-[#843722]">{quickActionError}</div> : null}
+            {error ? <div className="panel border-danger-strong text-danger-foreground-muted">{error}</div> : null}
+            {quickActionError ? <div className="panel border-danger-strong text-danger-foreground-muted">{quickActionError}</div> : null}
             <SummaryStats
               analysis={displayedData?.analysis}
               metricAnalyses={displayedData?.metricAnalyses}
