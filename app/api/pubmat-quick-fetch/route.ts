@@ -47,7 +47,7 @@ export async function POST(request: Request) {
   try {
     const metricRangeOverrides = await readMetricRangeOverridesFromCookies();
     const body = (await request.json()) as PubmatQuickFetchBody;
-    const metric = body.metric && validMetrics.includes(body.metric) ? body.metric : "rainfall";
+    const metric = body.metric && validMetrics.includes(body.metric) ? body.metric : "precipitation";
     const intervalMinutes = clampInterval(body.intervalMinutes);
     const requestGapMs = Math.max(body.requestGapMs ?? 600, 350);
     const useDemoData = body.useDemoData ?? !process.env.KLOUDTRACK_API_TOKEN;

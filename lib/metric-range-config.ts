@@ -51,7 +51,6 @@ function isMetricKey(value: string): value is MetricKey {
     "windDirection",
     "windSpeed",
     "precipitation",
-    "rainfall",
     "uvIndex",
     "lightIntensity",
   ].includes(value);

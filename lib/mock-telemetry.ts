@@ -14,7 +14,7 @@ export const demoStations: StationMetadata[] = [
   {
     id: "station-014",
     name: "Pump House Delta",
-    type: "rainfall",
+    type: "rain-gauge",
     location: [14.676, 121.0437],
     city: "Quezon City",
     state: "Metro Manila",

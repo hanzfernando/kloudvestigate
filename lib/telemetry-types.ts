@@ -45,7 +45,6 @@ export interface TelemetryMetricRaw {
   windDirection?: number;
   windSpeed?: number;
   precipitation?: number;
-  rainfall?: number;
   uvIndex?: number;
   distance?: number;
   calculatedWaterLevel?: number;

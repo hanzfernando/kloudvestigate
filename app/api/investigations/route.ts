@@ -37,7 +37,6 @@ const validMetrics: InvestigationMetricKey[] = [
   "windDirection",
   "windSpeed",
   "precipitation",
-  "rainfall",
   "uvIndex",
   "lightIntensity",
 ];
@@ -241,9 +240,9 @@ async function generateAnswer(
 function parseSelection(
   body: Partial<InvestigationSelection>,
 ): InvestigationSelection {
-  const metric = body.metric && validMetrics.includes(body.metric)
+  const metric: InvestigationMetricKey = body.metric && validMetrics.includes(body.metric)
     ? body.metric
-    : "rainfall";
+    : "precipitation";
   const end = body.end ? new Date(body.end) : new Date();
   const start = body.start
     ? new Date(body.start)

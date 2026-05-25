@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { PubmatWorkspace } from "@/components/telemetry/PubmatWorkspace";
+import { PageShell } from "@/components/layout/PageShell";
 import { metrics } from "@/components/telemetry/constants";
 import { allMetricKeys } from "@/lib/metric-profiles";
 import type { InvestigationMetricKey, MetricKey } from "@/lib/telemetry-types";
@@ -15,26 +15,17 @@ export default async function PubmatPage({ searchParams }: PubmatPageProps) {
   const autoRun = params.run === "1" || params.run === "true";
 
   return (
-    <div className="min-h-screen bg-[#f4f6f3] text-[#18211d]">
-      <header className="border-b border-[#d8ded5] bg-[#fbfcfa]">
-        <div className="mx-auto flex max-w-375 flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">
-              Pubmat data prep
-            </p>
-            <h1 className="mt-2 text-2xl font-semibold tracking-normal sm:text-3xl">
-              Station Aggregate Table
-            </h1>
-          </div>
-          <nav className="flex flex-wrap gap-2 text-sm">
-            <Link className="nav-pill" href="/">Investigation dashboard</Link>
-            <Link className="nav-pill" href="/architecture">Architecture</Link>
-            <Link className="nav-pill" href="/config">Metric config</Link>
-          </nav>
-        </div>
-      </header>
-
-      <main className="mx-auto grid max-w-375 gap-5 px-5 py-5">
+    <PageShell
+      eyebrow="Pubmat data prep"
+      title="Station Aggregate Table"
+      navLinks={[
+        { href: "/", label: "Investigation dashboard" },
+        { href: "/config", label: "Metric config" },
+        { href: "/architecture", label: "Architecture" },
+        { href: "/debug/ai-context", label: "AI context viewer" },
+      ]}
+    >
+      <main className="grid gap-5">
         <PubmatWorkspace
           autoRun={autoRun}
           initialIntervalMinutes={initialIntervalMinutes}
@@ -42,15 +33,15 @@ export default async function PubmatPage({ searchParams }: PubmatPageProps) {
           metrics={metrics}
         />
       </main>
-    </div>
+    </PageShell>
   );
 }
 
 function parseMetric(value?: string): InvestigationMetricKey {
   if (value === "all") return "all";
   return allMetricKeys.includes(value as MetricKey)
-    ? value as MetricKey
-    : "rainfall";
+    ? value as InvestigationMetricKey
+    : "precipitation";
 }
 
 function parseInterval(value?: string) {

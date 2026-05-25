@@ -1,5 +1,5 @@
-import Link from "next/link";
 import architectureData from "@/docs/project-architecture.json";
+import { PageShell } from "@/components/layout/PageShell";
 import { MermaidDiagram } from "@/components/architecture/MermaidDiagram";
 
 type ArchitectureData = typeof architectureData;
@@ -8,23 +8,18 @@ const data = architectureData as ArchitectureData;
 
 export default function ArchitecturePage() {
   return (
-    <main className="min-h-screen bg-[#f4f6f3] px-5 py-6 text-[#18211d]">
-      <div className="mx-auto max-w-337.5">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">System design</p>
-            <h1 className="mt-2 text-3xl font-semibold">Telemetry Copilot Architecture</h1>
-            <p className="mt-2 max-w-3xl text-sm leading-6 text-[#526258]">
-              {data.project.tokenSavingSummary}
-            </p>
-          </div>
-          <nav className="flex flex-wrap gap-2 text-sm">
-            <Link className="nav-pill" href="/">Dashboard</Link>
-            <Link className="nav-pill" href="/pubmat">Pubmat</Link>
-            <Link className="nav-pill" href="/config">Metric config</Link>
-          </nav>
-        </div>
-
+    <PageShell
+      eyebrow="System design"
+      title="Telemetry Copilot Architecture"
+      description={data.project.tokenSavingSummary}
+      navLinks={[
+        { href: "/", label: "Dashboard" },
+        { href: "/pubmat", label: "Pubmat" },
+        { href: "/config", label: "Metric config" },
+        { href: "/debug/ai-context", label: "AI context viewer" },
+      ]}
+    >
+      <div className="grid gap-4">
         <section className="grid gap-4 lg:grid-cols-3">
           <Info title="Project" items={[
             data.project.purpose,
@@ -88,7 +83,7 @@ export default function ArchitecturePage() {
           </div>
         </section>
       </div>
-    </main>
+    </PageShell>
   );
 }
 

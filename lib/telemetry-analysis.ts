@@ -37,7 +37,7 @@ export function analyzeTelemetry(
   options: AnalyzeTelemetryOptions,
 ): TelemetryAnalysis {
   const expectedIntervalMinutes = options.expectedIntervalMinutes ?? 1;
-  const metricProfile = options.metricProfile ?? getMetricAnalysisProfile("rainfall");
+  const metricProfile = options.metricProfile ?? getMetricAnalysisProfile("temperature");
   const effectiveWarningLevels = metricProfile.thresholdDetection === false
     ? defaultWarningLevels
     : metricProfile.warningLevels ?? warningLevels;

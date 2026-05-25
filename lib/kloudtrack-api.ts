@@ -163,7 +163,7 @@ function resolveHistoryEndpoint(
   stationId: string,
   parameter: MetricKey,
 ): { path: string; responseKey: "telemetry" | "waterLevel" | "rainGauge" } {
-  if (parameter === "rainfall") {
+  if (parameter === "precipitation") {
     return {
       path: `/rain-gauge/station/${stationId}/history/mm`,
       responseKey: "rainGauge",

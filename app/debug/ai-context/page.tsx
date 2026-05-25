@@ -1,22 +1,19 @@
 "use client";
 
-import Link from "next/link";
+import { PageShell } from "@/components/layout/PageShell";
 
 export default function AiContextDebugPage() {
   return (
-    <main className="min-h-screen bg-[#f4f6f3] px-5 py-6 text-[#18211d]">
-      <div className="mx-auto max-w-350">
-        <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">Developer diagnostics</p>
-            <h1 className="mt-2 text-3xl font-semibold">AI Request Context Viewer</h1>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Link className="nav-pill" href="/config">Metric config</Link>
-            <Link className="nav-pill" href="/">Back to dashboard</Link>
-          </div>
-        </div>
-
+    <PageShell
+      eyebrow="Developer diagnostics"
+      title="AI Request Context Viewer"
+      navLinks={[
+        { href: "/", label: "Dashboard" },
+        { href: "/pubmat", label: "Pubmat" },
+        { href: "/config", label: "Metric config" },
+        { href: "/architecture", label: "Architecture" },
+      ]}
+    >
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
           <section className="panel">
             <h2 className="panel-title">Structured Telemetry Payload</h2>
@@ -43,7 +40,6 @@ export default function AiContextDebugPage() {
             </div>
           </section>
         </div>
-      </div>
-    </main>
+    </PageShell>
   );
 }
