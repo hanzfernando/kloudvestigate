@@ -7,6 +7,7 @@ import {
   normalizeDashboardStations,
   normalizeTelemetry,
 } from "@/lib/kloudtrack-api";
+import { readMetricRangeOverridesFromCookies } from "@/lib/metric-range-config.server";
 import { allMetricKeys, getMetricAnalysisProfile } from "@/lib/metric-profiles";
 import { createDemoTelemetry, demoStations } from "@/lib/mock-telemetry";
 import { analyzeTelemetry, defaultWarningLevels } from "@/lib/telemetry-analysis";
@@ -44,6 +45,7 @@ export async function POST(request: Request) {
   if (denied) return denied;
 
   try {
+    const metricRangeOverrides = await readMetricRangeOverridesFromCookies();
     const body = (await request.json()) as PubmatQuickFetchBody;
     const metric = body.metric && validMetrics.includes(body.metric) ? body.metric : "rainfall";
     const intervalMinutes = clampInterval(body.intervalMinutes);
@@ -57,7 +59,14 @@ export async function POST(request: Request) {
     for (const [index, station] of stations.entries()) {
       if (request.signal.aborted) break;
 
-      results.push(await fetchStationBucket(station, metric, selectedMetricKeys, window, useDemoData));
+      results.push(await fetchStationBucket(
+        station,
+        metric,
+        selectedMetricKeys,
+        window,
+        useDemoData,
+        metricRangeOverrides,
+      ));
 
       if (index < stations.length - 1 && !request.signal.aborted) {
         await sleep(requestGapMs);
@@ -101,6 +110,7 @@ async function fetchStationBucket(
   selectedMetricKeys: MetricKey[],
   window: BucketWindow,
   useDemoData: boolean,
+  metricRangeOverrides: Record<string, { minimum: number; maximum: number }>,
 ) {
   try {
     const source = await loadTelemetryForStation(station, metric, window, useDemoData);
@@ -117,7 +127,7 @@ async function fetchStationBucket(
         end: window.fetchEnd,
         aggregationMinutes: minutesBetween(window.bucketStart, window.bucketEnd),
         expectedIntervalMinutes: minutesBetween(window.bucketStart, window.bucketEnd),
-        metricProfile: getMetricAnalysisProfile(key),
+        metricProfile: getMetricAnalysisProfile(key, metricRangeOverrides),
       });
 
       if (record) values[key] = record.value;

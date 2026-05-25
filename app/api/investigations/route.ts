@@ -13,6 +13,7 @@ import {
   normalizeAllTelemetry,
   normalizeTelemetry,
 } from "@/lib/kloudtrack-api";
+import { readMetricRangeOverridesFromCookies } from "@/lib/metric-range-config.server";
 import { allMetricKeys, getMetricAnalysisProfile } from "@/lib/metric-profiles";
 import { createDemoTelemetry } from "@/lib/mock-telemetry";
 import { analyzeTelemetry, defaultWarningLevels, findPointInTime } from "@/lib/telemetry-analysis";
@@ -46,6 +47,7 @@ export async function GET(request: Request) {
   if (denied) return denied;
 
   try {
+    const metricRangeOverrides = await readMetricRangeOverridesFromCookies();
     const url = new URL(request.url);
     const stationIds = (url.searchParams.get("stationIds") ?? "")
       .split(",")
@@ -69,6 +71,7 @@ export async function GET(request: Request) {
         end: selection.end,
         aggregationMinutes: selection.aggregationMinutes,
       },
+      variant: JSON.stringify(metricRangeOverrides),
     });
 
     return Response.json({
@@ -103,6 +106,8 @@ export async function POST(request: Request) {
       useDemoData?: boolean;
     };
 
+    const metricRangeOverrides = await readMetricRangeOverridesFromCookies();
+    const cacheVariant = JSON.stringify(metricRangeOverrides);
     const requestedDemoData = body.useDemoData ?? false;
     const askCopilot = body.askCopilot ?? false;
     const selection = parseSelection(body);
@@ -111,7 +116,7 @@ export async function POST(request: Request) {
       pointTimestamp: body.pointTimestamp,
     });
     const cached = canUseCache
-      ? await readServerInvestigationCache(selection)
+      ? await readServerInvestigationCache(selection, cacheVariant)
       : null;
 
     if (cached) {
@@ -134,7 +139,7 @@ export async function POST(request: Request) {
         records: aggregateTelemetryRecords(item.records, selection.start, selection.aggregationMinutes),
       })),
     };
-    const metricAnalyses = analyzeMetricSeries(aggregatedSource.series, selection);
+    const metricAnalyses = analyzeMetricSeries(aggregatedSource.series, selection, metricRangeOverrides);
     const primary = metricAnalyses[0];
     if (!primary) throw new Error("No telemetry records were available for the selected metric.");
 
@@ -176,7 +181,7 @@ export async function POST(request: Request) {
     };
 
     if (canUseCache) {
-      await writeServerInvestigationCache(selection, payload);
+      await writeServerInvestigationCache(selection, payload, cacheVariant);
     }
 
     writeAuditEvent({
@@ -325,6 +330,7 @@ async function loadAllTelemetry(selection: InvestigationSelection, useDemoData: 
 function analyzeMetricSeries(
   series: Array<{ metric: MetricKey; records: TelemetryRecord[] }>,
   selection: InvestigationSelection,
+  metricRangeOverrides: Record<string, { minimum: number; maximum: number }>,
 ): Array<{ metric: MetricKey; analysis: TelemetryAnalysis; records: TelemetryRecord[] }> {
   return series.map((item) => ({
     metric: item.metric,
@@ -334,7 +340,7 @@ function analyzeMetricSeries(
       end: selection.end,
       aggregationMinutes: selection.aggregationMinutes,
       expectedIntervalMinutes: selection.aggregationMinutes,
-      metricProfile: getMetricAnalysisProfile(item.metric),
+      metricProfile: getMetricAnalysisProfile(item.metric, metricRangeOverrides),
     }),
   }));
 }

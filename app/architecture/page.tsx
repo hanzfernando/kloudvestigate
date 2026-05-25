@@ -9,7 +9,7 @@ const data = architectureData as ArchitectureData;
 export default function ArchitecturePage() {
   return (
     <main className="min-h-screen bg-[#f4f6f3] px-5 py-6 text-[#18211d]">
-      <div className="mx-auto max-w-[1350px]">
+      <div className="mx-auto max-w-337.5">
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">System design</p>
@@ -21,6 +21,7 @@ export default function ArchitecturePage() {
           <nav className="flex flex-wrap gap-2 text-sm">
             <Link className="nav-pill" href="/">Dashboard</Link>
             <Link className="nav-pill" href="/pubmat">Pubmat</Link>
+            <Link className="nav-pill" href="/config">Metric config</Link>
           </nav>
         </div>
 

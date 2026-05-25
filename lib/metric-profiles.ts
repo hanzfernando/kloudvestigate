@@ -1,5 +1,10 @@
 import type { MetricAnalysisProfile, MetricKey, WarningLevel } from "./telemetry-types";
 
+export type MetricRangeOverrides = Partial<Record<MetricKey, {
+  minimum: number;
+  maximum: number;
+}>>;
+
 export const allMetricKeys: MetricKey[] = [
   "temperature",
   "humidity",
@@ -8,7 +13,6 @@ export const allMetricKeys: MetricKey[] = [
   "windDirection",
   "windSpeed",
   "precipitation",
-  "rainfall",
   "uvIndex",
   "lightIntensity",
 ];
@@ -54,7 +58,7 @@ export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = 
     metric: "temperature",
     label: "Temperature",
     unit: "C",
-    acceptableRange: { minimum: -10, maximum: 55 },
+    acceptableRange: { minimum: 15, maximum: 55 },
     spikeDelta: 3,
     warningLevels: heatStressWarningLevels,
     flatlineMinutes: 45,
@@ -83,7 +87,7 @@ export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = 
     metric: "heatIndex",
     label: "Heat index",
     unit: "C",
-    acceptableRange: { minimum: -10, maximum: 65 },
+    acceptableRange: { minimum: 15, maximum: 65 },
     spikeDelta: 3,
     warningLevels: heatStressWarningLevels,
     flatlineMinutes: 45,
@@ -117,15 +121,6 @@ export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = 
     warningLevels: rainfallWarningLevels,
     flatlineMinutes: 180,
   },
-  rainfall: {
-    metric: "rainfall",
-    label: "Rainfall",
-    unit: "mm",
-    acceptableRange: { minimum: 0, maximum: 300 },
-    spikeDelta: 20,
-    warningLevels: rainfallWarningLevels,
-    flatlineMinutes: 180,
-  },
   uvIndex: {
     metric: "uvIndex",
     label: "UV index",
@@ -148,8 +143,16 @@ export const metricAnalysisProfiles: Record<MetricKey, MetricAnalysisProfile> = 
   },
 };
 
-export function getMetricAnalysisProfile(metric: MetricKey): MetricAnalysisProfile {
-  return metricAnalysisProfiles[metric];
+export function getMetricAnalysisProfile(
+  metric: MetricKey,
+  overrides?: MetricRangeOverrides,
+): MetricAnalysisProfile {
+  const profile = metricAnalysisProfiles[metric];
+  const rangeOverride = overrides?.[metric];
+
+  return rangeOverride
+    ? { ...profile, acceptableRange: { ...rangeOverride } }
+    : profile;
 }
 
 export function getMetricWarningLevels(metric: MetricKey): WarningLevel[] {

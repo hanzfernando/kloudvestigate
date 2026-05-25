@@ -236,6 +236,7 @@ export function TelemetryInvestigationDashboard() {
           <nav className="flex flex-wrap gap-2 text-sm">
             <Link className="nav-pill" href="/pubmat">Pubmat table</Link>
             <Link className="nav-pill" href="/architecture">Architecture</Link>
+            <Link className="nav-pill" href="/config">Metric config</Link>
             <Link className="nav-pill" href="/debug/ai-context">AI context viewer</Link>
           </nav>
         </div>

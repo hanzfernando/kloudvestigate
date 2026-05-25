@@ -6,7 +6,6 @@ export type MetricKey =
   | "windDirection"
   | "windSpeed"
   | "precipitation"
-  | "rainfall"
   | "uvIndex"
   | "lightIntensity";
 

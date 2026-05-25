@@ -61,8 +61,9 @@ export function canUseServerInvestigationCache({
 
 export async function readServerInvestigationCache<TPayload>(
   selection: InvestigationSelection,
+  variant = "",
 ) {
-  return investigationCache.get(getCacheKey(selection)) as
+  return investigationCache.get(getCacheKey(selection, variant)) as
     | (TPayload & { cache: { hit: true; savedAt: string } })
     | null;
 }
@@ -70,9 +71,11 @@ export async function readServerInvestigationCache<TPayload>(
 export async function readServerBatchInvestigationCache<TPayload>({
   stationIds,
   selection,
+  variant = "",
 }: {
   stationIds: string[];
   selection: Omit<InvestigationSelection, "stationId">;
+  variant?: string;
 }) {
   const resultsByStationId: Record<string, TPayload & { cache: { hit: true; savedAt: string } }> = {};
 
@@ -80,7 +83,7 @@ export async function readServerBatchInvestigationCache<TPayload>({
     const cached = await readServerInvestigationCache<TPayload>({
       ...selection,
       stationId,
-    });
+    }, variant);
     if (cached) {
       resultsByStationId[stationId] = cached;
     }
@@ -92,13 +95,15 @@ export async function readServerBatchInvestigationCache<TPayload>({
 export async function writeServerInvestigationCache<TPayload>(
   selection: InvestigationSelection,
   payload: TPayload,
+  variant = "",
 ) {
-  investigationCache.set(getCacheKey(selection), payload);
+  investigationCache.set(getCacheKey(selection, variant), payload);
 }
 
-function getCacheKey(selection: InvestigationSelection) {
+function getCacheKey(selection: InvestigationSelection, variant = "") {
   return JSON.stringify({
     version: CACHE_VERSION,
+    variant,
     stationId: selection.stationId,
     metric: selection.metric,
     start: selection.start,

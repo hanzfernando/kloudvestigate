@@ -17,7 +17,7 @@ export default async function PubmatPage({ searchParams }: PubmatPageProps) {
   return (
     <div className="min-h-screen bg-[#f4f6f3] text-[#18211d]">
       <header className="border-b border-[#d8ded5] bg-[#fbfcfa]">
-        <div className="mx-auto flex max-w-[1500px] flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
+        <div className="mx-auto flex max-w-375 flex-col gap-5 px-5 py-5 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#537062]">
               Pubmat data prep
@@ -29,11 +29,12 @@ export default async function PubmatPage({ searchParams }: PubmatPageProps) {
           <nav className="flex flex-wrap gap-2 text-sm">
             <Link className="nav-pill" href="/">Investigation dashboard</Link>
             <Link className="nav-pill" href="/architecture">Architecture</Link>
+            <Link className="nav-pill" href="/config">Metric config</Link>
           </nav>
         </div>
       </header>
 
-      <main className="mx-auto grid max-w-[1500px] gap-5 px-5 py-5">
+      <main className="mx-auto grid max-w-375 gap-5 px-5 py-5">
         <PubmatWorkspace
           autoRun={autoRun}
           initialIntervalMinutes={initialIntervalMinutes}
