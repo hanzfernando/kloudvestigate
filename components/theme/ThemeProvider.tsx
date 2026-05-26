@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useContext, useEffect, useMemo, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 
 export type ThemeMode = "light" | "dark";
@@ -11,10 +11,11 @@ type ThemeContextValue = {
 };
 
 const THEME_STORAGE_KEY = "kloudvestigate-theme";
+const THEME_CHANGE_EVENT = "kloudvestigate-theme-change";
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [theme, setTheme] = useState<ThemeMode>(getPreferredTheme);
+  const theme = useSyncExternalStore(subscribeToThemeChanges, getPreferredTheme, getServerTheme);
 
   useEffect(() => {
     applyTheme(theme);
@@ -24,14 +25,11 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     () => ({
       theme,
       toggleTheme: () => {
-        setTheme((currentTheme) => {
-          const nextTheme = currentTheme === "dark" ? "light" : "dark";
+        const nextTheme = theme === "dark" ? "light" : "dark";
 
-          window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
-          applyTheme(nextTheme);
-
-          return nextTheme;
-        });
+        window.localStorage.setItem(THEME_STORAGE_KEY, nextTheme);
+        applyTheme(nextTheme);
+        window.dispatchEvent(new Event(THEME_CHANGE_EVENT));
       },
     }),
     [theme],
@@ -57,6 +55,30 @@ function getPreferredTheme(): ThemeMode {
   if (savedTheme === "dark" || savedTheme === "light") return savedTheme;
 
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+}
+
+function getServerTheme(): ThemeMode {
+  return "light";
+}
+
+function subscribeToThemeChanges(onStoreChange: () => void) {
+  if (typeof window === "undefined") return () => {};
+
+  const colorSchemeQuery = window.matchMedia("(prefers-color-scheme: dark)");
+  const handleThemeChange = () => onStoreChange();
+  const handleStorageChange = (event: StorageEvent) => {
+    if (event.key === THEME_STORAGE_KEY) onStoreChange();
+  };
+
+  window.addEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+  window.addEventListener("storage", handleStorageChange);
+  colorSchemeQuery.addEventListener("change", handleThemeChange);
+
+  return () => {
+    window.removeEventListener(THEME_CHANGE_EVENT, handleThemeChange);
+    window.removeEventListener("storage", handleStorageChange);
+    colorSchemeQuery.removeEventListener("change", handleThemeChange);
+  };
 }
 
 function applyTheme(theme: ThemeMode) {

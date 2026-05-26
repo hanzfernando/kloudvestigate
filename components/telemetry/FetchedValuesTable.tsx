@@ -73,11 +73,11 @@ export function FetchedValuesTable({
 
   const panelClass = mode === "full"
     ? "panel fixed inset-x-4 top-4 bottom-4 z-30 overflow-hidden"
-    : "panel overflow-hidden";
+    : "panel min-w-0 overflow-hidden";
 
   return (
     <div className={panelClass}>
-      <div className="flex h-full flex-col">
+      <div className="flex h-full min-w-0 flex-col">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h2 className="panel-title">Fetched Values</h2>
@@ -99,7 +99,7 @@ export function FetchedValuesTable({
           </button>
         </div>
       </div>
-      <div className={`mt-3 overflow-auto ${mode === "full" ? "min-h-0 flex-1" : "max-h-105"}`}>
+      <div className={`mt-3 min-w-0 overflow-auto ${mode === "full" ? "min-h-0 flex-1" : "max-h-105"}`}>
         <table className="ops-table">
           <thead>
             <tr>

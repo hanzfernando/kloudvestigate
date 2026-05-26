@@ -31,7 +31,7 @@ export function EventList({ title, empty, items, tone = "neutral", maxVisible = 
                 key={`${item.primary}-${item.secondary}`}
               >
                 <p className="font-mono text-xs font-medium">{item.primary}</p>
-                <p className="text-xs text-muted mt-0.5">{item.secondary}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{item.secondary}</p>
               </div>
             ))
           : <p className="empty-state">{empty}</p>

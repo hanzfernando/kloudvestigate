@@ -226,7 +226,7 @@ export function TelemetryInvestigationDashboard() {
       eyebrow="Internal telemetry intelligence"
       title="Telemetry Investigation Copilot"
     >
-      <main className="grid gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
+      <main className="grid min-w-0 gap-4 lg:grid-cols-[320px_minmax(0,1fr)]">
         <InvestigationScopePanel
           stations={stations}
           stationId={stationId}
@@ -250,7 +250,7 @@ export function TelemetryInvestigationDashboard() {
         />
 
         <section className="grid min-w-0 gap-4">
-          <div className="panel flex flex-col gap-3">
+          <div className="panel flex min-w-0 flex-col gap-3">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[0.16em] text-label">

@@ -52,11 +52,11 @@ export function OutlierOverview({
 
   const panelClass = mode === "full"
     ? "panel fixed inset-x-4 top-4 bottom-4 z-30 overflow-hidden"
-    : "panel overflow-hidden";
+    : "panel min-w-0 overflow-hidden";
 
   return (
     <div className={panelClass}>
-      <div className="flex h-full flex-col">
+      <div className="flex h-full min-w-0 flex-col">
         <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <h2 className="panel-title">Acceptable Range Audit</h2>
@@ -128,7 +128,7 @@ function JoinedAuditTable({
   }
 
   return (
-    <div className={`mt-4 overflow-auto ${expanded ? "min-h-0 flex-1" : "max-h-[520px]"}`}>
+    <div className={`mt-4 min-w-0 overflow-auto ${expanded ? "min-h-0 flex-1" : "max-h-[520px]"}`}>
       <table className="ops-table min-w-[1100px]">
         <thead>
           <tr>

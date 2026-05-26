@@ -63,6 +63,7 @@ export function analyzeTelemetry(
     options.end,
     expectedIntervalMinutes,
   );
+  const missingRecordCount = sumMissingRecords(missingPeriods);
   const spikes = metricProfile.spikeDetection === false ? [] : findSpikes(unique, spikeDelta);
   const rangeViolations = findRangeViolations(unique, metricProfile);
   const thresholdCrossings = metricProfile.thresholdDetection === false
@@ -97,7 +98,7 @@ export function analyzeTelemetry(
       latestTimestamp: latestReading?.timestamp ?? null,
       recordCount: unique.length,
       expectedRecordCount,
-      missingRecordCount: Math.max(0, expectedRecordCount - unique.length),
+      missingRecordCount,
       trend: determineTrend(firstValue, lastValue),
       stale: latestReading
         ? Date.parse(options.end) - Date.parse(latestReading.timestamp) > staleAfterMinutes * minuteMs
@@ -208,11 +209,12 @@ function buildIntervalSummaries(
       recordCount: bucketRecords.length,
       missingCount: Math.max(
         0,
-        countExpectedRecords(
+        countMissingRecords(
+          bucketRecords,
           new Date(bucketStart).toISOString(),
           new Date(bucketEnd).toISOString(),
           expectedIntervalMinutes,
-        ) - bucketRecords.length,
+        ),
       ),
       trend: determineTrend(values[0], values.at(-1) ?? values[0]),
       dominantWarningLevel: Object.entries(warningCounts).sort((a, b) => b[1] - a[1])[0][0] as WarningName,
@@ -289,13 +291,25 @@ function findMissingPeriods(
   end: string,
   expectedIntervalMinutes: number,
 ): MissingPeriod[] {
-  const present = new Set(records.map((record) => Date.parse(record.timestamp)));
+  const startMs = Date.parse(start);
+  const endMs = Date.parse(end);
+  const intervalMs = expectedIntervalMinutes * minuteMs;
+  const present = new Set<number>();
+
+  for (const record of records) {
+    const time = Date.parse(record.timestamp);
+    if (Number.isNaN(time)) continue;
+
+    const slot = startMs + Math.floor((time - startMs) / intervalMs) * intervalMs;
+    if (slot >= startMs && slot <= endMs) present.add(slot);
+  }
+
   const periods: MissingPeriod[] = [];
   let currentStart: number | null = null;
   let currentEnd: number | null = null;
   let missingCount = 0;
 
-  for (let time = Date.parse(start); time <= Date.parse(end); time += expectedIntervalMinutes * minuteMs) {
+  for (let time = startMs; time <= endMs; time += intervalMs) {
     if (!present.has(time)) {
       currentStart ??= time;
       currentEnd = time;
@@ -324,6 +338,19 @@ function findMissingPeriods(
   }
 
   return periods;
+}
+
+function countMissingRecords(
+  records: TelemetryRecord[],
+  start: string,
+  end: string,
+  expectedIntervalMinutes: number,
+): number {
+  return sumMissingRecords(findMissingPeriods(records, start, end, expectedIntervalMinutes));
+}
+
+function sumMissingRecords(periods: MissingPeriod[]): number {
+  return periods.reduce((total, period) => total + period.missingCount, 0);
 }
 
 function findDuplicateTimestamps(records: TelemetryRecord[]): DuplicateTimestamp[] {

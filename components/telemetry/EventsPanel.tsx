@@ -13,6 +13,7 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
   const [activeMetric, setActiveMetric] = useState<string | null>(null);
   const [showLists, setShowLists] = useState(true);
   const [totalsExpanded, setTotalsExpanded] = useState(false);
+  const [hideSingleMissingRecords, setHideSingleMissingRecords] = useState(false);
 
   const analyses = metricAnalyses?.length
     ? metricAnalyses
@@ -31,6 +32,19 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
   const activeDuplicates = active.analysis.duplicateTimestamps.length;
   const activeQuality = activeMissing + activeDuplicates;
   const activeTotal = activeSpikes + activeViolations + activeQuality;
+  const visibleMissingPeriods = hideSingleMissingRecords
+    ? active.analysis.missingPeriods.filter((item) => item.missingCount !== 1)
+    : active.analysis.missingPeriods;
+  const visibleQualityItems = [
+    ...visibleMissingPeriods.map(item => ({
+      primary: `${formatTime(item.start)} to ${formatTime(item.end)}`,
+      secondary: `${item.missingCount} missing records`,
+    })),
+    ...active.analysis.duplicateTimestamps.map(item => ({
+      primary: formatTime(item.timestamp),
+      secondary: `${item.count} duplicate records`,
+    })),
+  ];
 
   return (
     <div className="panel">
@@ -43,6 +57,15 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           <span className="status-chip">{activeTotal} events</span>
+          <label className="nav-pill inline-flex cursor-pointer items-center gap-2">
+            <input
+              type="checkbox"
+              className="h-3.5 w-3.5 accent-[var(--accent)]"
+              checked={hideSingleMissingRecords}
+              onChange={(event) => setHideSingleMissingRecords(event.target.checked)}
+            />
+            Hide 1 missing record
+          </label>
           <button className="nav-pill" type="button" onClick={() => setShowLists((current) => !current)}>
             {showLists ? "Collapse lists" : "Expand lists"}
           </button>
@@ -120,7 +143,7 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
             tone="caution"
             items={active.analysis.spikes.map(item => ({
               primary: formatTime(item.timestamp),
-              secondary: `${item.previousValue} → ${item.currentValue} (${item.difference}) · limit ${item.limit}`,
+              secondary: `${item.previousValue} -> ${item.currentValue} (${item.difference}) - limit ${item.limit}`,
             }))}
             maxVisible={6}
           />
@@ -130,23 +153,14 @@ export function EventsPanel({ analysis, metricAnalyses }: EventsPanelProps) {
             tone="critical"
             items={active.analysis.rangeViolations.map(item => ({
               primary: formatTime(item.timestamp),
-              secondary: `${item.value} is ${item.direction} range ${item.minimum}–${item.maximum}`,
+              secondary: `${item.value} is ${item.direction} range ${item.minimum}-${item.maximum}`,
             }))}
             maxVisible={6}
           />
           <EventList
             title="Data quality"
             empty="No quality issues"
-            items={[
-              ...active.analysis.missingPeriods.map(item => ({
-                primary: `${formatTime(item.start)} → ${formatTime(item.end)}`,
-                secondary: `${item.missingCount} missing records`,
-              })),
-              ...active.analysis.duplicateTimestamps.map(item => ({
-                primary: formatTime(item.timestamp),
-                secondary: `${item.count} duplicate records`,
-              })),
-            ]}
+            items={visibleQualityItems}
             maxVisible={6}
           />
         </div>
