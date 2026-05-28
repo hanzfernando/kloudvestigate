@@ -33,7 +33,7 @@ export function PageShell({ eyebrow, title, description, children }: PageShellPr
 
   return (
     <div className="min-h-screen bg-background px-5 py-6 text-foreground">
-      <div className="mx-auto flex min-h-[calc(100vh-48px)] max-w-375 flex-col">
+      <div className="mx-auto flex min-h-[calc(100vh-48px)] max-w-365 flex-col">
 
         {/* Page header */}
         <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
@@ -62,7 +62,7 @@ export function PageShell({ eyebrow, title, description, children }: PageShellPr
         </div>
 
         {/* Main content */}
-        <main className="flex-1">{children}</main>
+        <main className="flex-1 px-8">{children}</main>
 
         {/* Footer */}
         <footer className="mt-12 border-t border-border">
