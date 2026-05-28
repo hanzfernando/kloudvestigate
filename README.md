@@ -32,8 +32,6 @@ Server-side requests use `KLOUDTRACK_API_BASE_URL` and `KLOUDTRACK_API_TOKEN`; t
 KLOUDTRACK_API_BASE_URL=https://api.kloudtechsea.com/api/v1
 KLOUDTRACK_API_TOKEN=your-kloudtrack-token
 INTERNAL_COPILOT_TOKEN=internal-access-token
-DATABASE_URL=postgres://postgres:postgres@localhost:5432/kloud_copilot
-REDIS_URL=redis://localhost:6379
 ```
 
 ## Development
@@ -69,4 +67,3 @@ npm run build
 docker compose up --build
 ```
 
-For AWS, deploy the app container to ECS/Fargate or App Runner, PostgreSQL to RDS, Redis to ElastiCache, and set `INTERNAL_COPILOT_TOKEN` behind SSO/VPN access.
