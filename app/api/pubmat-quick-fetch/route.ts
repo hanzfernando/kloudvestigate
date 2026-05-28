@@ -50,7 +50,7 @@ export async function POST(request: Request) {
     const metric = body.metric && validMetrics.includes(body.metric) ? body.metric : "precipitation";
     const intervalMinutes = clampInterval(body.intervalMinutes);
     const requestGapMs = Math.max(body.requestGapMs ?? 600, 350);
-    const useDemoData = body.useDemoData ?? !process.env.KLOUDTRACK_API_TOKEN;
+    const useDemoData = body.useDemoData || !process.env.KLOUDTRACK_API_TOKEN;
     const window = buildBucketWindow(body.timestamp, intervalMinutes);
     const selectedMetricKeys = metric === "all" ? allMetricKeys : [metric];
     const stations = await loadStations(useDemoData);
