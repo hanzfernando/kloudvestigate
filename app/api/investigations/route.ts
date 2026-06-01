@@ -290,7 +290,6 @@ async function loadTelemetry(selection: InvestigationSelection, useDemoData: boo
     selection.metric,
     {
       skip: "0",
-      take: "2000",
       interval: selection.aggregationMinutes.toString(),
       startDate: selection.start,
       endDate: selection.end,
@@ -318,7 +317,6 @@ async function loadAllTelemetry(selection: InvestigationSelection, useDemoData: 
 
   const raw = await getAllTelemetryHistoryFromKloudtrackApi(selection.stationId, {
     skip: "0",
-    take: "2000",
     interval: selection.aggregationMinutes.toString(),
     startDate: selection.start,
     endDate: selection.end,

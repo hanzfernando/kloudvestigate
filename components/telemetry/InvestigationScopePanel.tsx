@@ -31,6 +31,14 @@ export function InvestigationScopePanel({
   quickActionBusy,
   quickActionProgress,
   quickActionResultsByStationId = {},
+  batchCustomScopeEnabled = false,
+  batchStart,
+  batchEnd,
+  batchAggregationMinutes = 1,
+  onBatchCustomScopeEnabledChange,
+  onBatchStartChange,
+  onBatchEndChange,
+  onBatchAggregationChange,
 }: {
   stations: StationMetadata[];
   stationId: string;
@@ -51,6 +59,14 @@ export function InvestigationScopePanel({
   quickActionBusy?: boolean;
   quickActionProgress?: string;
   quickActionResultsByStationId?: Record<string, InvestigationResponse>;
+  batchCustomScopeEnabled?: boolean;
+  batchStart?: string;
+  batchEnd?: string;
+  batchAggregationMinutes?: number;
+  onBatchCustomScopeEnabledChange?: (value: boolean) => void;
+  onBatchStartChange?: (value: string) => void;
+  onBatchEndChange?: (value: string) => void;
+  onBatchAggregationChange?: (value: number) => void;
 }) {
   const hasQuickActionResults = quickActionBusy || Object.keys(quickActionResultsByStationId).length > 0;
 
@@ -112,6 +128,14 @@ export function InvestigationScopePanel({
           quickActionProgress={quickActionProgress}
           quickActionResultsByStationId={quickActionResultsByStationId}
           hasQuickActionResults={hasQuickActionResults}
+          customScopeEnabled={batchCustomScopeEnabled}
+          customStart={batchStart}
+          customEnd={batchEnd}
+          customAggregationMinutes={batchAggregationMinutes}
+          onCustomScopeEnabledChange={onBatchCustomScopeEnabledChange}
+          onCustomStartChange={onBatchStartChange}
+          onCustomEndChange={onBatchEndChange}
+          onCustomAggregationChange={onBatchAggregationChange}
         />
       ) : null}
     </aside>
@@ -142,6 +166,14 @@ function StationBatchSection({
   quickActionProgress,
   quickActionResultsByStationId,
   hasQuickActionResults,
+  customScopeEnabled,
+  customStart,
+  customEnd,
+  customAggregationMinutes,
+  onCustomScopeEnabledChange,
+  onCustomStartChange,
+  onCustomEndChange,
+  onCustomAggregationChange,
 }: {
   stations: StationMetadata[];
   stationId: string;
@@ -151,10 +183,72 @@ function StationBatchSection({
   quickActionProgress?: string;
   quickActionResultsByStationId: Record<string, InvestigationResponse>;
   hasQuickActionResults: boolean;
+  customScopeEnabled: boolean;
+  customStart?: string;
+  customEnd?: string;
+  customAggregationMinutes: number;
+  onCustomScopeEnabledChange?: (value: boolean) => void;
+  onCustomStartChange?: (value: string) => void;
+  onCustomEndChange?: (value: string) => void;
+  onCustomAggregationChange?: (value: number) => void;
 }) {
+  const canEditCustomScope =
+    Boolean(onCustomScopeEnabledChange && onCustomStartChange && onCustomEndChange && onCustomAggregationChange);
+
   return (
     <div className="mt-4 border-t border-border-subtle pt-4">
       <p className="text-xs font-semibold uppercase tracking-[0.14em] text-label">Station batch</p>
+      {canEditCustomScope ? (
+        <div className="mt-3 rounded-[6px] border border-border-subtle bg-surface p-3">
+          <label className="flex items-center justify-between gap-3 text-sm font-medium text-card-foreground">
+            <span>Custom batch scope</span>
+            <input
+              className="h-4 w-4 accent-primary"
+              type="checkbox"
+              checked={customScopeEnabled}
+              onChange={(event) => onCustomScopeEnabledChange?.(event.target.checked)}
+            />
+          </label>
+          {customScopeEnabled ? (
+            <div className="mt-3 grid gap-3">
+              <label className="field-label">
+                Batch start (PH)
+                <input
+                  className="field"
+                  type="datetime-local"
+                  value={customStart ?? ""}
+                  onChange={(event) => onCustomStartChange?.(event.target.value)}
+                />
+              </label>
+              <label className="field-label">
+                Batch end (PH)
+                <input
+                  className="field"
+                  type="datetime-local"
+                  value={customEnd ?? ""}
+                  onChange={(event) => onCustomEndChange?.(event.target.value)}
+                />
+              </label>
+              <label className="field-label">
+                Batch interval
+                <select
+                  className="field"
+                  value={customAggregationMinutes}
+                  onChange={(event) => onCustomAggregationChange?.(Number(event.target.value))}
+                >
+                  <option value={1}>1 minute</option>
+                  <option value={15}>15 minutes</option>
+                  <option value={30}>30 minutes</option>
+                  <option value={60}>1 hour</option>
+                  <option value={360}>6 hours</option>
+                  <option value={720}>12 hours</option>
+                  <option value={1440}>Daily</option>
+                </select>
+              </label>
+            </div>
+          ) : null}
+        </div>
+      ) : null}
       <button
         className="primary-action mt-3 w-full"
         type="button"
@@ -164,7 +258,9 @@ function StationBatchSection({
         {quickActionBusy ? `Investigating every station${quickActionProgress ? ` (${quickActionProgress})` : ""}` : "Investigate every station"}
       </button>
       <p className="mt-2 text-xs leading-5 text-label">
-        Yesterday, full day, all metrics, 1-minute aggregation, throttled to 3 requests per second.
+        {customScopeEnabled
+          ? "Custom range, all metrics, selected interval, throttled to 3 requests per second."
+          : "Yesterday, full day, all metrics, 1-minute aggregation, throttled to 3 requests per second."}
       </p>
       {hasQuickActionResults ? (
         <StationBatchSummary

@@ -179,7 +179,6 @@ async function loadTelemetryForStation(
 
   const raw = await getTelemetryMetricHistoryFromKloudtrackApi(station.id, metric, {
     skip: "0",
-    take: "2000",
     interval: minutesBetween(window.bucketStart, window.bucketEnd).toString(),
     startDate: window.fetchStart,
     endDate: window.fetchEnd,
@@ -219,7 +218,6 @@ async function loadAllTelemetryForStation(
 
   const raw = await getAllTelemetryHistoryFromKloudtrackApi(station.id, {
     skip: "0",
-    take: "2000",
     interval: minutesBetween(window.bucketStart, window.bucketEnd).toString(),
     startDate: window.fetchStart,
     endDate: window.fetchEnd,

@@ -45,6 +45,10 @@ export function TelemetryInvestigationDashboard() {
   const [manualDataStationId, setManualDataStationId] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [batchCustomScopeEnabled, setBatchCustomScopeEnabled] = useState(false);
+  const [batchStart, setBatchStart] = useState(() => buildYesterdayFullDayInputRange().start);
+  const [batchEnd, setBatchEnd] = useState(() => buildYesterdayFullDayInputRange().end);
+  const [batchAggregationMinutes, setBatchAggregationMinutes] = useState(1);
   const quickActionStatus = useInvestigationQuickActionStore((state) => state.status);
   const quickActionCompletedStations = useInvestigationQuickActionStore((state) => state.completedStations);
   const quickActionTotalStations = useInvestigationQuickActionStore((state) => state.totalStations);
@@ -156,7 +160,7 @@ export function TelemetryInvestigationDashboard() {
     if (quickActionRunning || loading || !stations.length) return;
 
     const populatedResults = quickActionResultsByStationId;
-    const hasPopulatedResults = Object.keys(populatedResults).length > 0;
+    const hasPopulatedResults = !batchCustomScopeEnabled && Object.keys(populatedResults).length > 0;
     const skipPopulatedStations = hasPopulatedResults
       ? window.confirm("There is already populated investigation data. Skip stations that already have data?")
       : false;
@@ -168,7 +172,12 @@ export function TelemetryInvestigationDashboard() {
     setData(null);
     beginQuickAction(stations.length, initialResults);
 
-    const { start, end } = buildYesterdayFullDayRange();
+    const batchScope = buildBatchInvestigationScope({
+      customScopeEnabled: batchCustomScopeEnabled,
+      customStart: batchStart,
+      customEnd: batchEnd,
+      customAggregationMinutes: batchAggregationMinutes,
+    });
 
     for (const [index, station] of stations.entries()) {
       setQuickActionStation(station.id, index);
@@ -190,10 +199,10 @@ export function TelemetryInvestigationDashboard() {
             body: JSON.stringify({
               stationId: station.id,
               metric: "all",
-              aggregationMinutes: 1,
-              start,
-              end,
-              question: "Summarize every metric for yesterday's full day.",
+              aggregationMinutes: batchScope.aggregationMinutes,
+              start: batchScope.start,
+              end: batchScope.end,
+              question: batchScope.question,
               askCopilot: false,
               useDemoData: false,
             }),
@@ -247,6 +256,14 @@ export function TelemetryInvestigationDashboard() {
           quickActionBusy={quickActionRunning}
           quickActionProgress={`${quickActionCompletedStations}/${quickActionTotalStations}`}
           quickActionResultsByStationId={quickActionStatus !== "idle" ? quickActionResultsByStationId : undefined}
+          batchCustomScopeEnabled={batchCustomScopeEnabled}
+          batchStart={batchStart}
+          batchEnd={batchEnd}
+          batchAggregationMinutes={batchAggregationMinutes}
+          onBatchCustomScopeEnabledChange={setBatchCustomScopeEnabled}
+          onBatchStartChange={setBatchStart}
+          onBatchEndChange={setBatchEnd}
+          onBatchAggregationChange={setBatchAggregationMinutes}
         />
 
         <section className="grid min-w-0 gap-4">
@@ -298,6 +315,40 @@ function buildYesterdayFullDayRange() {
   return {
     start: phtDayBoundaryToUtcISOString(-1),
     end: phtDayBoundaryToUtcISOString(0),
+  };
+}
+
+function buildYesterdayFullDayInputRange() {
+  return {
+    start: toInputValue(new Date(phtDayBoundaryToUtcISOString(-1))),
+    end: toInputValue(new Date(phtDayBoundaryToUtcISOString(0))),
+  };
+}
+
+function buildBatchInvestigationScope({
+  customScopeEnabled,
+  customStart,
+  customEnd,
+  customAggregationMinutes,
+}: {
+  customScopeEnabled: boolean;
+  customStart: string;
+  customEnd: string;
+  customAggregationMinutes: number;
+}) {
+  if (!customScopeEnabled) {
+    return {
+      ...buildYesterdayFullDayRange(),
+      aggregationMinutes: 1,
+      question: "Summarize every metric for yesterday's full day.",
+    };
+  }
+
+  return {
+    start: philippineInputToUtcISOString(customStart),
+    end: philippineInputToUtcISOString(customEnd),
+    aggregationMinutes: customAggregationMinutes,
+    question: "Summarize every metric for the selected custom batch range.",
   };
 }
 
