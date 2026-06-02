@@ -10,6 +10,10 @@ import { allMetricKeys } from "./metric-profiles";
 const KLOUDTRACK_API_BASE_URL =
   process.env.KLOUDTRACK_API_BASE_URL || "https://api.kloudtechsea.com/api/v1";
 const KLOUDTRACK_API_TOKEN = process.env.KLOUDTRACK_API_TOKEN;
+const KLOUDTRACK_REQUEST_TIMEOUT_MS = readPositiveNumber(
+  process.env.KLOUDTRACK_REQUEST_TIMEOUT_MS,
+  120_000,
+);
 
 interface KloudtrackApiResponse<T> {
   success: boolean;
@@ -36,7 +40,11 @@ class KloudtrackApiClient {
     }
 
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), 10_000);
+    let timedOut = false;
+    const timeout = setTimeout(() => {
+      timedOut = true;
+      controller.abort();
+    }, KLOUDTRACK_REQUEST_TIMEOUT_MS);
 
     try {
       const response = await fetch(`${this.baseURL}${endpoint}`, {
@@ -58,6 +66,14 @@ class KloudtrackApiClient {
         throw new Error(apiResponse.message || "Kloudtrack API request failed");
       }
       return apiResponse.data;
+    } catch (error) {
+      if (timedOut) {
+        throw new Error(
+          `KloudTrack API request timed out after ${formatTimeoutSeconds(KLOUDTRACK_REQUEST_TIMEOUT_MS)}.`,
+        );
+      }
+
+      throw error;
     } finally {
       clearTimeout(timeout);
     }
@@ -183,4 +199,14 @@ function readMetricValue(
   if (metric === "windDirection") return record.wind?.direction ?? record.windDirection;
   if (metric === "windSpeed") return record.wind?.speed ?? record.windSpeed;
   return record[metric];
+}
+
+function readPositiveNumber(value: string | undefined, fallback: number) {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : fallback;
+}
+
+function formatTimeoutSeconds(timeoutMs: number) {
+  const seconds = timeoutMs / 1000;
+  return Number.isInteger(seconds) ? `${seconds}s` : `${seconds.toFixed(1)}s`;
 }

@@ -31,6 +31,7 @@ Server-side requests use `KLOUDTRACK_API_BASE_URL` and `KLOUDTRACK_API_TOKEN`; t
 ```bash
 KLOUDTRACK_API_BASE_URL=https://api.kloudtechsea.com/api/v1
 KLOUDTRACK_API_TOKEN=your-kloudtrack-token
+KLOUDTRACK_REQUEST_TIMEOUT_MS=120000
 INTERNAL_COPILOT_TOKEN=internal-access-token
 ```
 

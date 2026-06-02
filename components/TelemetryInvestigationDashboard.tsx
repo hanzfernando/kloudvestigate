@@ -16,7 +16,7 @@ import { phtDayBoundaryToUtcISOString, philippineInputToUtcISOString, toInputVal
 import { useInvestigationQuickActionStore } from "./telemetry/useInvestigationQuickActionStore";
 
 const QUICK_ACTION_REQUEST_GAP_MS = 350;
-const QUICK_ACTION_REQUEST_TIMEOUT_MS = 45_000;
+const QUICK_ACTION_REQUEST_TIMEOUT_MS = 300_000;
 
 export function TelemetryInvestigationDashboard() {
   const [stationId, setStationId] = useState("station-001");
