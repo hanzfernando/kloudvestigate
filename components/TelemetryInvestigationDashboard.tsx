@@ -287,6 +287,7 @@ export function TelemetryInvestigationDashboard() {
             <TelemetryTimeline
               analysis={displayedData?.analysis}
               metricAnalyses={displayedData?.metricAnalyses}
+              aggregationMinutes={displayedData?.selection.aggregationMinutes}
               sourceLabel={sourceLabel}
             />
             <EventsPanel analysis={displayedData?.analysis} metricAnalyses={displayedData?.metricAnalyses} />
