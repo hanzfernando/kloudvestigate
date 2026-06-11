@@ -49,6 +49,7 @@ export function TelemetryInvestigationDashboard() {
   const [batchStart, setBatchStart] = useState(() => buildYesterdayFullDayInputRange().start);
   const [batchEnd, setBatchEnd] = useState(() => buildYesterdayFullDayInputRange().end);
   const [batchAggregationMinutes, setBatchAggregationMinutes] = useState(1);
+  const [batchStationIds, setBatchStationIds] = useState<string[] | null>(null);
   const quickActionStatus = useInvestigationQuickActionStore((state) => state.status);
   const quickActionCompletedStations = useInvestigationQuickActionStore((state) => state.completedStations);
   const quickActionTotalStations = useInvestigationQuickActionStore((state) => state.totalStations);
@@ -101,6 +102,7 @@ export function TelemetryInvestigationDashboard() {
         if (!response.ok) throw new Error(`Station list request failed (${response.status})`);
         const payload = (await response.json()) as StationsResponse;
         setStations(payload.stations);
+        setBatchStationIds((current) => reconcileSelectedStationIds(current, payload.stations));
         setStationSource(payload.source);
         const firstStationId = payload.stations[0]?.id ?? stationId;
         if (firstStationId !== stationId) setStationId(firstStationId);
@@ -157,20 +159,29 @@ export function TelemetryInvestigationDashboard() {
   }
 
   async function runInvestigateEveryStation() {
-    if (quickActionRunning || loading || !stations.length) return;
+    const selectedBatchStationIds = batchStationIds ?? stations.map((station) => station.id);
+    const selectedBatchStations = stations.filter((station) => selectedBatchStationIds.includes(station.id));
+    if (quickActionRunning || loading || !selectedBatchStations.length) return;
 
     const populatedResults = quickActionResultsByStationId;
-    const hasPopulatedResults = !batchCustomScopeEnabled && Object.keys(populatedResults).length > 0;
+    const hasPopulatedResults = !batchCustomScopeEnabled
+      && selectedBatchStations.some((station) => populatedResults[station.id]);
     const skipPopulatedStations = hasPopulatedResults
       ? window.confirm("There is already populated investigation data. Skip stations that already have data?")
       : false;
-    const initialResults = skipPopulatedStations ? populatedResults : {};
+    const initialResults = skipPopulatedStations
+      ? Object.fromEntries(
+        selectedBatchStations
+          .filter((station) => populatedResults[station.id])
+          .map((station) => [station.id, populatedResults[station.id]]),
+      )
+      : {};
 
     setError(null);
     if (!skipPopulatedStations) resetQuickAction();
     setManualDataStationId(null);
     setData(null);
-    beginQuickAction(stations.length, initialResults);
+    beginQuickAction(selectedBatchStations.length, initialResults);
 
     const batchScope = buildBatchInvestigationScope({
       customScopeEnabled: batchCustomScopeEnabled,
@@ -179,7 +190,7 @@ export function TelemetryInvestigationDashboard() {
       customAggregationMinutes: batchAggregationMinutes,
     });
 
-    for (const [index, station] of stations.entries()) {
+    for (const [index, station] of selectedBatchStations.entries()) {
       setQuickActionStation(station.id, index);
       setStationId(station.id);
 
@@ -222,7 +233,7 @@ export function TelemetryInvestigationDashboard() {
         setQuickActionStation(station.id, index + 1);
       }
 
-      if (index < stations.length - 1) {
+      if (index < selectedBatchStations.length - 1) {
         await wait(QUICK_ACTION_REQUEST_GAP_MS);
       }
     }
@@ -260,6 +271,8 @@ export function TelemetryInvestigationDashboard() {
           batchStart={batchStart}
           batchEnd={batchEnd}
           batchAggregationMinutes={batchAggregationMinutes}
+          batchStationIds={batchStationIds}
+          onBatchStationIdsChange={setBatchStationIds}
           onBatchCustomScopeEnabledChange={setBatchCustomScopeEnabled}
           onBatchStartChange={setBatchStart}
           onBatchEndChange={setBatchEnd}
@@ -324,6 +337,16 @@ function buildYesterdayFullDayInputRange() {
     start: toInputValue(new Date(phtDayBoundaryToUtcISOString(-1))),
     end: toInputValue(new Date(phtDayBoundaryToUtcISOString(0))),
   };
+}
+
+function reconcileSelectedStationIds(current: string[] | null, stations: StationMetadata[]) {
+  const stationIds = stations.map((station) => station.id);
+  if (!current) return stationIds;
+
+  const stationIdSet = new Set(stationIds);
+  const next = current.filter((stationId) => stationIdSet.has(stationId));
+
+  return next;
 }
 
 function buildBatchInvestigationScope({

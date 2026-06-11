@@ -4,6 +4,7 @@ import Image from "next/image";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
 import { ThemeToggleButton } from "@/components/theme/ThemeToggleButton";
+import { KloudtrackEnvironmentSwitch } from "@/components/telemetry/KloudtrackEnvironmentSwitch";
 
 export type PageNavLink = {
   href: string;
@@ -57,6 +58,7 @@ export function PageShell({ eyebrow, title, description, children }: PageShellPr
                 </Link>
               ))}
             </nav>
+            <KloudtrackEnvironmentSwitch />
             <ThemeToggleButton />
           </div>
         </div>
